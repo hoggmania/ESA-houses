@@ -1,0 +1,36 @@
+{
+    "title": "Application Security",
+    "governance": {
+        "title": "Application Security Governance",
+        "components ": [
+            {"capability":"SAST","name":"Static Code Scanning","maturity":"MANAGED","status":"HIGH","initiatives":3},
+            {"capability":"RASP","name":"RASP Agent","maturity":"DEFINED","status":"MEDIUM","initiatives":0}
+        ]
+    },
+    "capabilities": {
+      "title": "Application Security Capabilities",
+      "domains": [
+        {
+                "domain":"Application Security Testing",
+                "components ": [
+                    {"capability":"SAST","name":"Static Code Scanning","maturity":"MANAGED","status":"HIGH","initiatives":5},
+                    {"capability":"RASP","name":"RASP Agent","maturity":"DEFINED","status":"MEDIUM","initiatives":0}
+                ]
+            },
+            {
+                "domain":"RASP Security Testing",
+                "components ": [
+                    {"capability":"SAST","name":"Static Code Scanning","maturity":"REPEATABLE","status":"LOW","initiatives":2},
+                    {"capability":"RASP","name":"RASP Agent","maturity":"INITIAL","status":"MEDIUM","initiatives":1}
+                ]
+            },
+            {
+                "domain":"DAST Security Testing",
+                "components ": [
+                    {"capability":"SAST","name":"Static Code Scanning","maturity":"OPTIMISED","status":"EFFECTIVE","initiatives":4},
+                    {"capability":"RASP","name":"RASP Agent","maturity":"DEFINED","status":"MEDIUM","initiatives":0}
+                ]
+            }
+        ]
+    } 
+}

@@ -1,0 +1,36 @@
+{
+    "title": "Application Security",
+    "governance": {
+        "title": "Application Security Governance",
+        "components": [
+            {"capability":"SAST","name":"Static Code Scanning","maturity":"MANAGED","status":"HIGH","initiatives":3,"doubleBorder":true,"rag":"green"},
+            {"capability":"RASP","name":"RASP Agent","maturity":"DEFINED","status":"MEDIUM","initiatives":0,"doubleBorder":false,"rag":"amber"}
+        ]
+    },
+    "capabilities": {
+      "title": "Application Security Capabilities",
+      "domains": [
+        {
+                "domain":"Application Security Testing",
+                "components": [
+                    {"capability":"SAST","name":"Static Code Scanning","maturity":"MANAGED","status":"HIGH","initiatives":5,"doubleBorder":true,"rag":"green"},
+                    {"capability":"DAST","name":"Dynamic Scanning","maturity":"DEFINED","status":"EFFECTIVE","initiatives":2,"doubleBorder":false,"rag":"green"}
+                ]
+            },
+            {
+                "domain":"Runtime Protection",
+                "components": [
+                    {"capability":"RASP","name":"RASP Agent","maturity":"REPEATABLE","status":"LOW","initiatives":2,"doubleBorder":false,"rag":"amber"},
+                    {"capability":"WAF","name":"Web Application Firewall","maturity":"INITIAL","status":"MEDIUM","initiatives":1,"doubleBorder":false,"rag":"red"}
+                ]
+            },
+            {
+                "domain":"Security Monitoring",
+                "components": [
+                    {"capability":"SIEM","name":"Security Events","maturity":"OPTIMISED","status":"EFFECTIVE","initiatives":4,"doubleBorder":false,"rag":"green"},
+                    {"capability":"Threat Intel","name":"Threat Intelligence","maturity":"DEFINED","status":"MEDIUM","initiatives":0,"doubleBorder":false,"rag":"amber"}
+                ]
+            }
+        ]
+    } 
+}
