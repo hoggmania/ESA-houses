@@ -10,6 +10,9 @@ public class DomainGroup {
     public float headerY;
     public float headerTextY;
     public float headerIconY;
+    public float headerWidth;
+    public float headerTextX;
+    public boolean showHeader = true;
 
     public DomainGroup() {}
 

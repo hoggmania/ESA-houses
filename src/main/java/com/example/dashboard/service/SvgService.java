@@ -61,6 +61,8 @@ public class SvgService {
         final int capabilityCharsPerLine = 22;
         final int maxNameLines = 2;
         final int maxCapabilityLines = 1;
+        final int maxRowsPerColumn = 8;
+        final float domainSectionGap = headerOffset + headerHeight; // leave enough room for next domain header
         final float textLeftX = 12f;
         final float textCenterX = boxW / 2f;
         final float iconPosX = boxW - 46f;
@@ -138,45 +140,41 @@ public class SvgService {
         java.util.List<Domain> domains = capabilities != null ? capabilities.domains : null;
         int legendY = 0;
         if (domains != null) {
-            // Start domains lower to leave a visual gap after capabilities title bar
+            java.util.List<DomainColumnLayout> columns = buildDomainColumns(domains, boxW, spaceW, maxRowsPerColumn);
             float currentX = domainStartX;
             float rowTopY = domainStartY;
             float rowBottomY = rowTopY;
             int columnsInRow = 0;
-                
-            for (int domainIdx = 0; domainIdx < domains.size(); domainIdx++) {
-                Domain d = domains.get(domainIdx);
-                String domainName = d != null && d.domain != null ? d.domain : ("Domain " + (domainIdx + 1));
-                boolean isSpace = "SPACE".equalsIgnoreCase(domainName);
-                String domainIcon = (d != null && d.icon != null && !d.icon.isBlank()) ? ("icon-" + d.icon.trim()) : null;
-                float columnWidth = isSpace ? spaceW : boxW;
-
+            java.util.Map<String, HeaderSpan> headerSpans = new java.util.HashMap<>();
+            for (DomainColumnLayout column : columns) {
+                float columnWidth = column.spacer ? column.width : boxW;
                 if (columnsInRow >= maxDomainColumnsPerRow || currentX + columnWidth > rightLimit) {
-                    // Wrap to a new row
                     rowTopY = rowBottomY + rowGapY;
                     rowBottomY = rowTopY;
                     currentX = domainStartX;
                     columnsInRow = 0;
                 }
-                
-                java.util.List<RenderItem> domainItems = new java.util.ArrayList<>();
-                java.util.List<com.example.dashboard.model.ComponentItem> comps = d != null ? d.components : null;
-                float headerY = rowTopY - headerOffset;
-                float headerTextY = headerY + 15f;
-                float headerIconY = headerY + 3f;
-                float columnBottom = headerY + headerHeight;
-                
-                // Only render components if not a SPACE domain
-                if (!isSpace && comps != null) {
+
+                if (column.spacer) {
+                    currentX += columnWidth + gapX;
+                    columnsInRow++;
+                    continue;
+                }
+
+                float sectionStartY = rowTopY;
+                float columnBottom = rowTopY;
+
+                for (DomainSectionChunk section : column.sections) {
+                    java.util.List<RenderItem> domainItems = new java.util.ArrayList<>();
+                    java.util.List<ComponentItem> comps = section.components;
                     for (int compIdx = 0; compIdx < comps.size(); compIdx++) {
                         var comp = comps.get(compIdx);
-                        float y = rowTopY + compIdx * (boxH + gapY);
-                        
-                        String gradientId = "grad_dom_" + domainIdx + "_" + compIdx;
+                        float y = sectionStartY + compIdx * (boxH + gapY);
+
+                        String gradientId = "grad_dom_" + domainGroups.size() + "_" + compIdx;
                         String border = "#333";
                         if (comp.rag != null && "red".equalsIgnoreCase(comp.rag)) border = "red";
 
-                        // Determine icon
                         String iconKey2 = comp.icon;
                         String iconId2 = (iconKey2 != null && !iconKey2.isBlank()) ? ("icon-" + iconKey2.trim()) : null;
 
@@ -184,7 +182,7 @@ public class SvgService {
                             currentX, y,
                             comp.name != null ? comp.name : "",
                             comp.capability != null ? comp.capability : "",
-                            domainName,
+                            section.domainName,
                             comp.status.hex,
                             comp.maturity.hex,
                             gradientId,
@@ -193,35 +191,58 @@ public class SvgService {
                             iconId2
                         ));
 
-
                         RenderItem lastDomainItem = domainItems.get(domainItems.size()-1);
                         lastDomainItem.initiatives = comp.initiatives;
                         lastDomainItem.showInitiatives = lastDomainItem.initiatives > 0;
                         lastDomainItem.nameLines = wrapText(lastDomainItem.name, nameCharsPerLine, maxNameLines);
                         lastDomainItem.capabilityLines = wrapText(lastDomainItem.capability, capabilityCharsPerLine, maxCapabilityLines);
                         configureTextLayout(lastDomainItem, textCenterX, textLeftX, iconPosX);
-                        columnBottom = Math.max(columnBottom, y + boxH);
                     }
-                    rowBottomY = Math.max(rowBottomY, columnBottom);
+
+                    DomainGroup group = new DomainGroup(section.domainName, section.iconId, domainItems);
+                    group.headerX = currentX;
+                    group.headerY = sectionStartY - headerOffset;
+                    group.headerTextY = group.headerY + 15f;
+                    group.headerIconY = group.headerY + 3f;
+                    group.headerWidth = columnWidth;
+                    group.headerTextX = columnWidth / 2f;
+                    group.showHeader = true;
+
+                    String headerKey = section.domainName + "@" + (int) rowTopY;
+                    HeaderSpan span = headerSpans.get(headerKey);
+                    if (span == null) {
+                        span = new HeaderSpan();
+                        span.startX = currentX;
+                        span.rowY = group.headerY;
+                        span.width = columnWidth;
+                        span.primaryGroup = group;
+                        headerSpans.put(headerKey, span);
+                    } else {
+                        span.width = (currentX + columnWidth) - span.startX;
+                        group.showHeader = false;
+                        group.headerWidth = 0;
+                        group.headerTextX = 0;
+                        if (span.primaryGroup != null) {
+                            span.primaryGroup.headerWidth = span.width;
+                            span.primaryGroup.headerTextX = span.width / 2f;
+                        }
+                    }
+
+                    domainGroups.add(group);
+
+                    if (!comps.isEmpty()) {
+                        float lastY = sectionStartY + (comps.size() - 1) * (boxH + gapY);
+                        float sectionBottom = lastY + boxH;
+                        columnBottom = Math.max(columnBottom, sectionBottom);
+                        sectionStartY = sectionBottom + domainSectionGap;
+                    }
                 }
-                
-                DomainGroup group = new DomainGroup(domainName, domainIcon, domainItems);
-                group.headerX = currentX;
-                group.headerY = headerY;
-                group.headerTextY = headerTextY;
-                group.headerIconY = headerIconY;
-                domainGroups.add(group);
-                
+
+                rowBottomY = Math.max(rowBottomY, columnBottom);
+                currentX += columnWidth + gapX;
                 columnsInRow++;
-                // Advance currentX based on column type
-                if (isSpace) {
-                    currentX += spaceW + gapX;
-                } else {
-                    currentX += boxW + gapX;
-                }
             }
 
-            // After laying out all domains, compute where the legend should start
             float legendStartY = rowBottomY + 30f;
             legendY = (int) legendStartY;
         } else {
@@ -304,6 +325,65 @@ public class SvgService {
         item.iconX = iconPosX;
     }
 
+    private java.util.List<DomainColumnLayout> buildDomainColumns(java.util.List<Domain> domains, float boxWidth, float spaceWidth, int maxRowsPerColumn) {
+        java.util.List<DomainColumnLayout> columns = new java.util.ArrayList<>();
+        for (Domain domain : domains) {
+            if (domain == null) {
+                continue;
+            }
+            String domainName = domain.domain != null ? domain.domain : "Domain";
+            if ("SPACE".equalsIgnoreCase(domainName)) {
+                columns.add(DomainColumnLayout.spacer(spaceWidth));
+                continue;
+            }
+            java.util.List<ComponentItem> components = domain.components;
+            int originalSize = components != null ? components.size() : 0;
+            boolean domainIsSmall = originalSize > 0 && originalSize <= 3;
+            java.util.List<DomainSectionChunk> chunks = splitDomainIntoChunks(domainName, domain.icon, components, maxRowsPerColumn);
+            for (DomainSectionChunk chunk : chunks) {
+                int rows = chunk.size();
+                if (rows == 0) continue;
+                boolean isSmall = domainIsSmall && rows <= 3;
+                DomainColumnLayout target = columns.isEmpty() ? null : columns.get(columns.size() - 1);
+                if (isSmall && target != null && target.canAcceptSmall(rows, maxRowsPerColumn)) {
+                    target.sections.add(chunk);
+                    target.rowsUsed += rows;
+                } else {
+                    DomainColumnLayout newCol = DomainColumnLayout.normal(boxWidth, isSmall);
+                    newCol.sections.add(chunk);
+                    newCol.rowsUsed = rows;
+                    columns.add(newCol);
+                }
+            }
+        }
+        return columns;
+    }
+
+    private java.util.List<DomainSectionChunk> splitDomainIntoChunks(String domainName, String icon, java.util.List<ComponentItem> components, int maxRowsPerColumn) {
+        java.util.List<DomainSectionChunk> chunks = new java.util.ArrayList<>();
+        if (components == null || components.isEmpty()) {
+            return chunks;
+        }
+        String iconId = (icon != null && !icon.isBlank()) ? ("icon-" + icon.trim()) : null;
+        int total = components.size();
+        if (total <= maxRowsPerColumn) {
+            chunks.add(new DomainSectionChunk(domainName, iconId, new java.util.ArrayList<>(components)));
+            return chunks;
+        }
+        int firstChunk = (int) Math.ceil(total / 2.0);
+        firstChunk = Math.min(firstChunk, maxRowsPerColumn);
+        chunks.add(new DomainSectionChunk(domainName, iconId, new java.util.ArrayList<>(components.subList(0, firstChunk))));
+        int index = firstChunk;
+        int remaining = total - firstChunk;
+        while (remaining > 0) {
+            int chunkSize = Math.min(maxRowsPerColumn, remaining);
+            chunks.add(new DomainSectionChunk(domainName, iconId, new java.util.ArrayList<>(components.subList(index, index + chunkSize))));
+            index += chunkSize;
+            remaining -= chunkSize;
+        }
+        return chunks;
+    }
+
     private java.util.List<String> wrapText(String value, int maxCharsPerLine, int maxLines) {
         if (value == null || value.isBlank()) {
             return java.util.Collections.singletonList("");
@@ -349,6 +429,55 @@ public class SvgService {
         if (trimmed.length() >= Math.max(1, maxCharsPerLine)) {
             trimmed = trimmed.substring(0, Math.max(0, maxCharsPerLine - 1));
         }
-        return trimmed + "…";
+        return trimmed + "...";
+    }
+
+    private static class DomainSectionChunk {
+        final String domainName;
+        final String iconId;
+        final java.util.List<ComponentItem> components;
+
+        DomainSectionChunk(String domainName, String iconId, java.util.List<ComponentItem> components) {
+            this.domainName = domainName;
+            this.iconId = iconId;
+            this.components = components;
+        }
+
+        int size() {
+            return components != null ? components.size() : 0;
+        }
+    }
+
+    private static class DomainColumnLayout {
+        final boolean spacer;
+        final float width;
+        final java.util.List<DomainSectionChunk> sections = new java.util.ArrayList<>();
+        int rowsUsed = 0;
+        boolean smallOnly;
+
+        DomainColumnLayout(boolean spacer, float width, boolean smallOnly) {
+            this.spacer = spacer;
+            this.width = width;
+            this.smallOnly = smallOnly;
+        }
+
+        static DomainColumnLayout spacer(float width) {
+            return new DomainColumnLayout(true, width, true);
+        }
+
+        static DomainColumnLayout normal(float width, boolean smallOnly) {
+            return new DomainColumnLayout(false, width, smallOnly);
+        }
+
+        boolean canAcceptSmall(int additionalRows, int maxRowsPerColumn) {
+            return !spacer && smallOnly && rowsUsed + additionalRows <= maxRowsPerColumn;
+        }
+    }
+
+    private static class HeaderSpan {
+        float startX;
+        float rowY;
+        float width;
+        DomainGroup primaryGroup;
     }
 }

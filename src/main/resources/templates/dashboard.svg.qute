@@ -170,14 +170,14 @@
 
   {#for domain in domainGroups}
     <!-- Domain title (above its column) -->
-    {#if domain.items.size > 0}
-    <rect x="{domain.headerX}" y="{domain.headerY}" width="{boxW}" height="22" rx="2" fill="#1E3A8A"/>
+    {#if domain.items.size > 0 && domain.showHeader}
+    <rect x="{domain.headerX}" y="{domain.headerY}" width="{domain.headerWidth}" height="22" rx="2" fill="#1E3A8A"/>
     <g transform="translate({domain.headerX},0)">
       {#if domain.icon}
       <!-- Domain icon in column title -->
       <use xlink:href="#{domain.icon}" x="6" y="{domain.headerIconY}" width="14" height="14" style="color: #FFFFFF"/>
       {/if}
-      <text x="{halfBoxW}" y="{domain.headerTextY}" text-anchor="middle" style="font: 12px sans-serif; font-weight: bold; fill: #FFFFFF;">{domain.domainName}</text>
+      <text x="{domain.headerTextX}" y="{domain.headerTextY}" text-anchor="middle" style="font: 12px sans-serif; font-weight: bold; fill: #FFFFFF;">{domain.domainName}</text>
     </g>
     {/if}
     
