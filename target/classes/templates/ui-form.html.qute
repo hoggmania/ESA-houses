@@ -18,15 +18,40 @@
     footer { margin-top: 24px; color: #666; font-size: 12px; }
   </style>
   <script>
+    const STORAGE_KEY = 'esa-dashboard-payload';
+
+    function trySavePayload(value) {
+      try {
+        localStorage.setItem(STORAGE_KEY, value);
+      } catch (err) {
+        console.warn('Unable to persist payload', err);
+      }
+    }
+
+    function hydratePayloadFromStorage() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          document.getElementById('payload').value = stored;
+        }
+      } catch (err) {
+        console.warn('Unable to read stored payload', err);
+      }
+    }
+
     function pasteSample() {
       fetch('/ui/sample').then(r => r.text()).then(t => {
-        document.getElementById('payload').value = t;
+        const textarea = document.getElementById('payload');
+        textarea.value = t;
+        trySavePayload(t);
       }).catch(err => {
         alert('Failed to load sample: ' + err);
       });
     }
+
     function renderText() {
       const payload = document.getElementById('payload').value;
+      trySavePayload(payload);
       fetch('/ui/render-text', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
@@ -40,6 +65,8 @@
         alert('Failed to render: ' + err);
       });
     }
+
+    window.addEventListener('DOMContentLoaded', hydratePayloadFromStorage);
   </script>
 </head>
 <body>

@@ -139,7 +139,7 @@
       <rect x="3" y="3" width="{boxW - 6}" height="{boxH - 6}" rx="1" ry="1" fill="none" stroke="{item.border}" stroke-width="1"/>
       {/if}
       {#if item.iconId}
-      <use xlink:href="#{item.iconId}" x="{item.iconX}" y="8" width="20" height="20" style="color: #111"/>
+      <use xlink:href="#{item.iconId}" x="{item.iconX}" y="0" width="20" height="20" style="color: #111"/>
       {/if}
       <text x="{item.textX}" y="22" text-anchor="{item.textAnchor}" style="font: 14px sans-serif; fill: #111;">
         {#for line in item.nameLines}
@@ -193,7 +193,7 @@
         <rect x="3" y="3" width="{boxW - 6}" height="{boxH - 6}" rx="1" ry="1" fill="none" stroke="{item.border}" stroke-width="1"/>
         {/if}
         {#if item.iconId}
-        <use xlink:href="#{item.iconId}" x="{item.iconX}" y="8" width="20" height="20" style="color: #111"/>
+        <use xlink:href="#{item.iconId}" x="{item.iconX}" y="0" width="20" height="20" style="color: #111"/>
         {/if}
         <text x="{item.textX}" y="22" text-anchor="{item.textAnchor}" style="font: 14px sans-serif; fill: #111;">
           {#for line in item.nameLines}
