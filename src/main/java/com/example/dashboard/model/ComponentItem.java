@@ -10,26 +10,34 @@ public class ComponentItem {
     
     // Enumerations for status and maturity with associated HEX colors
     public enum Status {
-        NOT_EXISTING("#908782"),
-        LOW("#d6761f"),
-        MEDIUM("#dfd005"),
-        HIGH("#80aa2e"),
-        EFFECTIVE("#0e8a39");
+        NOT_EXISTING("#908782", "Not Existing"),
+        LOW("#d6761f", "Low"),
+        MEDIUM("#dfd005", "Medium"),
+        HIGH("#80aa2e", "High"),
+        EFFECTIVE("#0e8a39", "Effective");
 
         public final String hex;
-        Status(String hex) { this.hex = hex; }
+        public final String displayName;
+        Status(String hex, String displayName) { 
+            this.hex = hex;
+            this.displayName = displayName;
+        }
     }
 
     public enum Maturity {
-        NOT_EXISTING("#908782"),
-        INITIAL("#d6761f"),
-        REPEATABLE("#d59704"),
-        DEFINED("#dfd005"),
-        MANAGED("#80aa2e"),
-        OPTIMISED("#0e8a39"); // spelling variant accepted in parser
+        NOT_EXISTING("#908782", "Not Existing"),
+        INITIAL("#d6761f", "Initial"),
+        REPEATABLE("#d59704", "Repeatable"),
+        DEFINED("#dfd005", "Defined"),
+        MANAGED("#80aa2e", "Managed"),
+        OPTIMISED("#0e8a39", "Optimised"); // spelling variant accepted in parser
 
         public final String hex;
-        Maturity(String hex) { this.hex = hex; }
+        public final String displayName;
+        Maturity(String hex, String displayName) { 
+            this.hex = hex;
+            this.displayName = displayName;
+        }
     }
 
     // Enum fields with JSON aliases to accept 'status' or 'statusEnum'
@@ -45,6 +53,7 @@ public class ComponentItem {
     public String summary;
     public int initiatives; // number of related initiatives; if >0 render badge
     public boolean doubleBorder; // if true, render with double border
+    public String icon; // optional logical icon key, e.g., "shield","lock","scan","waf"
 
     // default ctor for Jackson
     public ComponentItem() {}

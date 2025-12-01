@@ -14,12 +14,18 @@ public class RenderItem {
     public int initiatives; // if >0 display count badge
     public boolean showInitiatives;
     public boolean doubleBorder; // if true, render double border
+    public String iconId; // symbol id for icon, e.g., "icon-shield"
+    public java.util.List<String> nameLines;
+    public java.util.List<String> capabilityLines;
+    public float textX;
+    public String textAnchor;
+    public float iconX;
 
     public RenderItem() {}
 
     public RenderItem(float x, float y, String name, String capability, String domain, 
                       String capabilityColor, String maturityColor, String gradientId,
-                      String border, boolean doubleBorder) {
+                      String border, boolean doubleBorder, String iconId) {
         this.x = x;
         this.y = y;
         this.name = name;
@@ -33,6 +39,12 @@ public class RenderItem {
         this.initiatives = 0;
         this.showInitiatives = false;
         this.doubleBorder = doubleBorder;
+        this.iconId = iconId;
+        this.nameLines = java.util.Collections.singletonList(this.name != null ? this.name : "");
+        this.capabilityLines = java.util.Collections.singletonList(this.capability != null ? this.capability : "");
+        this.textX = 0;
+        this.textAnchor = "middle";
+        this.iconX = 0;
     }
 
     public boolean hasInitiatives() {

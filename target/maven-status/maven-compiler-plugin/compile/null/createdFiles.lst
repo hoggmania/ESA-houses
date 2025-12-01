@@ -1,0 +1,16 @@
+com\example\dashboard\service\SvgService.class
+com\example\dashboard\model\Domain.class
+com\example\dashboard\model\ESA.class
+com\example\dashboard\model\RenderItem.class
+com\example\dashboard\model\DomainGroup.class
+com\example\dashboard\exception\ValidationException.class
+com\example\dashboard\model\DashboardModel.class
+com\example\dashboard\exception\GlobalExceptionMapper.class
+com\example\dashboard\resource\DashboardResource.class
+com\example\dashboard\exception\GlobalExceptionMapper$ErrorResponse.class
+com\example\dashboard\MainApplication.class
+com\example\dashboard\model\Capabilities.class
+com\example\dashboard\model\Governance.class
+com\example\dashboard\model\ComponentItem$Status.class
+com\example\dashboard\model\ComponentItem.class
+com\example\dashboard\model\ComponentItem$Maturity.class

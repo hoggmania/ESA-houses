@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
  */
 public class ESA {
     public String title;
+    public String icon; // optional top-level icon for the dashboard
      @JsonAlias({"governance", "governance"})
     public Governance governance;
      @JsonAlias({"capabilities", "capabilities"})
@@ -16,7 +17,7 @@ public class ESA {
 
     @Override
     public String toString() {
-        return "ESA [title=" + title + ", governance=" + governance + ", capabilities=" + capabilities + "]";
+        return "ESA [title=" + title + ", icon=" + icon + ", governance=" + governance + ", capabilities=" + capabilities + "]";
     }
 
 

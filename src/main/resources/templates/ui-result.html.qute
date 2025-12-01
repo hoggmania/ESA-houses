@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESA Dashboard - Result</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #222; }
+    .actions { display: flex; gap: 12px; margin-bottom: 16px; }
+    button { appearance: none; background: #0d6efd; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    button.secondary { background: #6c757d; }
+    .canvas { overflow: auto; border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #fafafa; }
+    .svg-wrapper { display: inline-block; }
+  </style>
+</head>
+<body>
+  <div class="actions">
+    <form method="post" action="/ui/png">
+      <input type="hidden" name="payload" value="{payload}">
+      <button type="submit">Download PNG</button>
+    </form>
+    <a href="/ui"><button type="button" class="secondary">Back</button></a>
+  </div>
+
+  <div class="canvas">
+    <div class="svg-wrapper">
+      {svg.raw}
+    </div>
+  </div>
+</body>
+</html>

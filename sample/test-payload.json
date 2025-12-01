@@ -1,34 +1,104 @@
 {
     "title": "Application Security",
+    "icon": "shield",
     "governance": {
         "title": "Application Security Governance",
         "components": [
-            {"capability":"SAST","name":"Static Code Scanning","maturity":"MANAGED","status":"HIGH","initiatives":3,"doubleBorder":true,"rag":"green"},
-            {"capability":"RASP","name":"RASP Agent","maturity":"DEFINED","status":"MEDIUM","initiatives":0,"doubleBorder":false,"rag":"amber"}
+            {"name":"Governance Strategy","maturity":"MANAGED","status":"HIGH","doubleBorder":true},
+            {"name":"Architectural Design Principle","maturity":"DEFINED","status":"MEDIUM","doubleBorder":true},
+            {"name":"Strategy & Metrics","maturity":"MANAGED","status":"HIGH","doubleBorder":true},
+            {"name":"Technology Enhancement","maturity":"DEFINED","status":"HIGH","doubleBorder":true},
+            {"name":"Training & Awareness","maturity":"MANAGED","status":"HIGH","doubleBorder":true},
+            {"name":"Security Policy & Compliance","maturity":"DEFINED","status":"HIGH","doubleBorder":true},
+            {"name":"Risk & Compliance Management","maturity":"MANAGED","status":"HIGH","doubleBorder":true},
+            {"name":"Application Taxonomy","maturity":"DEFINED","status":"HIGH","doubleBorder":true},
+            {"name":"Change Management","maturity":"DEFINED","status":"HIGH","doubleBorder":true}
         ]
     },
     "capabilities": {
       "title": "Application Security Capabilities",
+      "icon": "chart",
       "domains": [
-        {
+            {
+                "domain":"S-SDLC",
+                "icon": "shield",
+                "components": [
+                    {"name":"SDLC Policies & Methodolgies","maturity":"REPEATABLE","status":"MEDIUM","initiatives":2},
+                    {"name":"Secure Coding","maturity":"REPEATABLE","status":"MEDIUM","initiatives":2},
+                    {"name":"Developer Notifications","maturity":"REPEATABLE","status":"MEDIUM","initiatives":2},
+                    {"name":"Secure Developer Training","maturity":"MANAGED","status":"HIGH","initiatives":2},
+                    {"name":"Developer Workspace Scanning and Protection","maturity":"REPEATABLE","status":"MEDIUM","initiatives":2},
+                    {"name":"Push/Pull Request Protection","maturity":"REPEATABLE","status":"MEDIUM","initiatives":2},
+                    {"name":"Automated Remdiation","maturity":"NOT_EXISTING","status":"NOT_EXISTING","initiatives":2}
+                ]
+            },
+                        {
+                "domain":"Secure Developer Services",
+                "icon": "steer",
+                "components": [
+                    {"name":"Cryptography Managemnet","maturity":"DEFINED","status":"MEDIUM"},
+                    {"name":"IAM","maturity":"DEFINED","status":"MEDIUM"}
+                ]
+            },
+            {
                 "domain":"Application Security Testing",
+                "icon": "group",
                 "components": [
-                    {"capability":"SAST","name":"Static Code Scanning","maturity":"MANAGED","status":"HIGH","initiatives":5,"doubleBorder":true,"rag":"green"},
-                    {"capability":"DAST","name":"Dynamic Scanning","maturity":"DEFINED","status":"EFFECTIVE","initiatives":2,"doubleBorder":false,"rag":"green"}
+                    {"name":"Pen Testing","maturity":"OPTIMISED","status":"HIGH"},
+                    {"name":"API Security & Scanning","maturity":"REPEATABLE","status":"LOW"},
+                    {"name":"Static Code Scanning (SAST)","maturity":"MANAGED","status":"HIGH","icon":"search","initiatives":1},
+                    {"name":"Software Composition Analysis(SCA)","maturity":"OPTIMISED","status":"EFFECTIVE","initiatives":2},
+                    {"name":"Developer self-service","maturity":"MANAGED","status":"HIGH"},
+                    {"name":"Reporting & Analytics","maturity":"DEFINED","status":"MEDIUM","initiatives":1},
+                    {"name":"Image Scanning","maturity":"DEFINED","status":"HIGH"},
+                    {"name":"Malicious Code Scanning","maturity":"DEFINED","status":"MEDIUM","initiatives":1},
+                    {"name":"Repository Scanning","maturity":"REPEATABLE","status":"MEDIUM","initiatives":1},
+                    {"name":"Issue Management","maturity":"MANAGED","status":"HIGH"},
+                    {"name":"CI/CD Gating","maturity":"MANAGED","status":"HIGH","initiatives":1},
+                    {"name":"Secret Scanning ","maturity":"INITIAL","status":"LOW","initiatives":3}
                 ]
             },
             {
-                "domain":"Runtime Protection",
+                "domain":"Runtime",
+                "icon": "user",
                 "components": [
-                    {"capability":"RASP","name":"RASP Agent","maturity":"REPEATABLE","status":"LOW","initiatives":2,"doubleBorder":false,"rag":"amber"},
-                    {"capability":"WAF","name":"Web Application Firewall","maturity":"INITIAL","status":"MEDIUM","initiatives":1,"doubleBorder":false,"rag":"red"}
+                    {"name":"WAF","maturity":"MANAGED","status":"HIGH"},
+                    {"name":"API Security Tools","maturity":"INITIAL", "status":"LOW","initiatives":2},
+                    {"name":"RASP","maturity":"DEFINED","status":"MEDIUM","initiatives":1},
+                    {"name":"Continuous OSS Security Monitoring","maturity":"OPTIMISED","status":"EFFECTIVE"},
+                    {"name":"Operational Health Monitoring","maturity":"REPEATABLE","status":"MEDIUM"},
+                    {"name":"SaaS & Cloud App Monitoring","maturity":"INITIAL","status":"LOW","initiatives":1}
+                ]
+            },
+           {
+                "domain":"Software Supply Chain Management",
+                "icon": "user",
+                "components": [
+                    {"name":"Hardened Software Factory","maturity":"NOT_EXISTING","status":"MEDIUM"},
+                    {"name":"Ingestion Validation","maturity":"REPEATABLE", "status":"HIGH"},
+                    {"name":"Asset Inventory","maturity":"REPEATABLE","status":"HIGH"},
+                    {"name":"Software Provenance","maturity":"NOT_EXISTING","status":"LOW"},
+                    {"name":"Continuous Monitoring","maturity":"REPEATABLE","status":"HIGH"}
                 ]
             },
             {
-                "domain":"Security Monitoring",
+                "domain":"Application Architecture",
+                "icon": "bug",
                 "components": [
-                    {"capability":"SIEM","name":"Security Events","maturity":"OPTIMISED","status":"EFFECTIVE","initiatives":4,"doubleBorder":false,"rag":"green"},
-                    {"capability":"Threat Intel","name":"Threat Intelligence","maturity":"DEFINED","status":"MEDIUM","initiatives":0,"doubleBorder":false,"rag":"amber"}
+                    {"name":"Application Patterns","maturity":"INITIAL","status":"LOW"},
+                    {"name":"Application Security Standards","maturity":"DEFINED", "status":"MEDIUM"},
+                    {"name":"Threat Modelling","maturity":"DEFINED","status":"MEDIUM"}
+
+                ]
+            },
+            {
+                "domain":"Mobile App",
+                "icon": "bug",
+                "components": [
+                    {"name":"Mobile App Security Controls","maturity":"INITIAL","status":"LOW"},
+                    {"name":"Mobile Security Testing","maturity":"REPEATABLE", "status":"MEDIUM"},
+                    {"name":"Threat Modelling","maturity":"MANAGED","status":"HIGH"}
+
                 ]
             }
         ]
