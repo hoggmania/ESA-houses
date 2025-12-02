@@ -132,20 +132,19 @@ public class UIResource {
     }
 
     @POST
-    @Path("/png")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces("image/png")
-    public Response downloadPng(@FormParam("payload") String payload) {
+    @Path("/svg")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces("image/svg+xml")
+    public Response downloadSvg(String payload) {
         try {
             ESA esa = objectMapper.readValue(payload, ESA.class);
             String svg = svgService.renderSvg(esa);
-            byte[] png = svgService.renderPngFromSvg(svg, 96f);
-            return Response.ok(png)
-                    .header("Content-Disposition", "attachment; filename=dashboard.png")
+            return Response.ok(svg)
+                    .header("Content-Disposition", "attachment; filename=dashboard.svg")
                     .build();
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(("Failed to render PNG: " + e.getMessage()).getBytes())
+                    .entity(("Failed to render SVG: " + e.getMessage()).getBytes())
                     .type(MediaType.TEXT_PLAIN)
                     .build();
         }

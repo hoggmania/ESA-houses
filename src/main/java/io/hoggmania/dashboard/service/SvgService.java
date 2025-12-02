@@ -26,6 +26,11 @@ import java.nio.charset.StandardCharsets;
 @ApplicationScoped
 public class SvgService {
 
+    private static final float DEFAULT_CANVAS_WIDTH = 1400f;
+    private static final float A4_WIDTH_MM = 297f;
+    private static final int LEGEND_HEIGHT = 90;
+    private static final int BOTTOM_MARGIN = 20;
+
     @Inject
     @Location("dashboard.svg.qute")
     Template dashboard; // Explicitly locate templates/dashboard.svg.qute
@@ -40,7 +45,7 @@ public class SvgService {
         final int maxDomainColumnsPerRow = 7;
         final float gapX = 16f;
         final float gapY = 12f;
-        final float canvasWidth = 1400f;
+        final float canvasWidth = DEFAULT_CANVAS_WIDTH;
         final float leftMargin = 10f;
         final float rightLimit = canvasWidth - leftMargin;
         final float domainStartX = 20f;
@@ -67,7 +72,8 @@ public class SvgService {
         final float textCenterX = boxW / 2f;
         final float iconPosX = boxW - 20f;
 
-        String title = root != null ? root.title : null;
+        String title = sanitizeNullable(root != null ? root.title : null);
+        java.util.List<InitiativeGradient> initiativeGradients = new java.util.ArrayList<>();
         float domainStartY = 230f;
         float capabilitiesHeaderY = 155f;
         float capabilitiesHeaderTextY = capabilitiesHeaderY + 18f;
@@ -77,8 +83,8 @@ public class SvgService {
         // Governance items (horizontal row)
         java.util.List<RenderItem> governanceItems = new java.util.ArrayList<>();
         Governance gov = root != null ? root.governance : null;
+        String govTitle = gov != null ? sanitizeNullable(gov.title) : null;
         if (gov != null && gov.components != null) {
-            String govTitle = gov.title;
             float govStartX = 20f;
             float govCurrentX = govStartX;
             float govRowTopY = governanceHeaderY + governanceHeaderHeight + governanceHeaderToRowGap;
@@ -101,10 +107,12 @@ public class SvgService {
                 String iconKey = comp.icon;
                 String iconId = (iconKey != null && !iconKey.isBlank()) ? ("icon-" + iconKey.trim()) : null;
 
+                String itemName = comp.name != null ? comp.name : "";
+                String itemCapability = comp.capability != null ? comp.capability : "";
                 governanceItems.add(new RenderItem(
                     x, y,
-                    comp.name != null ? comp.name : "",
-                    comp.capability != null ? comp.capability : "",
+                    itemName,
+                    itemCapability,
                     govTitle != null ? govTitle : "",
                     comp.status.hex,
                     comp.maturity.hex,
@@ -116,8 +124,9 @@ public class SvgService {
                 RenderItem lastGov = governanceItems.get(governanceItems.size()-1);
                 lastGov.initiatives = comp.initiatives;
                 lastGov.showInitiatives = lastGov.initiatives > 0;
-                lastGov.nameLines = wrapText(lastGov.name, nameCharsPerLine, maxNameLines);
-                lastGov.capabilityLines = wrapText(lastGov.capability, capabilityCharsPerLine, maxCapabilityLines);
+                lastGov.nameLines = escapeLines(wrapText(itemName, nameCharsPerLine, maxNameLines));
+                lastGov.capabilityLines = escapeLines(wrapText(itemCapability, capabilityCharsPerLine, maxCapabilityLines));
+                lastGov.initiativeStroke = computeInitiativeStroke(comp, gradientId, initiativeGradients);
                 configureTextLayout(lastGov, textCenterX, textLeftX, iconPosX);
 
                 govCurrentX += boxW + gapX;
@@ -178,10 +187,12 @@ public class SvgService {
                         String iconKey2 = comp.icon;
                         String iconId2 = (iconKey2 != null && !iconKey2.isBlank()) ? ("icon-" + iconKey2.trim()) : null;
 
+                        String itemName = comp.name != null ? comp.name : "";
+                        String itemCapability = comp.capability != null ? comp.capability : "";
                         domainItems.add(new RenderItem(
                             currentX, y,
-                            comp.name != null ? comp.name : "",
-                            comp.capability != null ? comp.capability : "",
+                            itemName,
+                            itemCapability,
                             section.domainName,
                             comp.status.hex,
                             comp.maturity.hex,
@@ -194,12 +205,13 @@ public class SvgService {
                         RenderItem lastDomainItem = domainItems.get(domainItems.size()-1);
                         lastDomainItem.initiatives = comp.initiatives;
                         lastDomainItem.showInitiatives = lastDomainItem.initiatives > 0;
-                        lastDomainItem.nameLines = wrapText(lastDomainItem.name, nameCharsPerLine, maxNameLines);
-                        lastDomainItem.capabilityLines = wrapText(lastDomainItem.capability, capabilityCharsPerLine, maxCapabilityLines);
+                        lastDomainItem.nameLines = escapeLines(wrapText(itemName, nameCharsPerLine, maxNameLines));
+                        lastDomainItem.capabilityLines = escapeLines(wrapText(itemCapability, capabilityCharsPerLine, maxCapabilityLines));
+                        lastDomainItem.initiativeStroke = computeInitiativeStroke(comp, gradientId, initiativeGradients);
                         configureTextLayout(lastDomainItem, textCenterX, textLeftX, iconPosX);
                     }
 
-                    DomainGroup group = new DomainGroup(section.domainName, section.iconId, domainItems);
+                    DomainGroup group = new DomainGroup(escapeXml(section.domainName), section.iconId, domainItems);
                     group.headerX = currentX;
                     group.headerY = sectionStartY - headerOffset;
                     group.headerTextY = group.headerY + 15f;
@@ -256,25 +268,29 @@ public class SvgService {
 
         // Prepare legend data: Status on left, Maturity on right with precomputed x offsets
         java.util.List<java.util.Map<String, Object>> statusLegend = new java.util.ArrayList<>();
-        statusLegend.add(java.util.Map.of("label", ComponentItem.Status.NOT_EXISTING.displayName, "color", ComponentItem.Status.NOT_EXISTING.hex, "x", 0));
-        statusLegend.add(java.util.Map.of("label", ComponentItem.Status.LOW.displayName, "color", ComponentItem.Status.LOW.hex, "x", 140));
-        statusLegend.add(java.util.Map.of("label", ComponentItem.Status.MEDIUM.displayName, "color", ComponentItem.Status.MEDIUM.hex, "x", 280));
-        statusLegend.add(java.util.Map.of("label", ComponentItem.Status.HIGH.displayName, "color", ComponentItem.Status.HIGH.hex, "x", 420));
-        statusLegend.add(java.util.Map.of("label", ComponentItem.Status.EFFECTIVE.displayName, "color", ComponentItem.Status.EFFECTIVE.hex, "x", 560));
+        statusLegend.add(legendEntry(ComponentItem.Status.NOT_EXISTING.displayName, ComponentItem.Status.NOT_EXISTING.hex, 0));
+        statusLegend.add(legendEntry(ComponentItem.Status.LOW.displayName, ComponentItem.Status.LOW.hex, 140));
+        statusLegend.add(legendEntry(ComponentItem.Status.MEDIUM.displayName, ComponentItem.Status.MEDIUM.hex, 280));
+        statusLegend.add(legendEntry(ComponentItem.Status.HIGH.displayName, ComponentItem.Status.HIGH.hex, 420));
+        statusLegend.add(legendEntry(ComponentItem.Status.EFFECTIVE.displayName, ComponentItem.Status.EFFECTIVE.hex, 560));
 
         java.util.List<java.util.Map<String, Object>> maturityLegend = new java.util.ArrayList<>();
-        maturityLegend.add(java.util.Map.of("label", ComponentItem.Maturity.NOT_EXISTING.displayName, "color", ComponentItem.Maturity.NOT_EXISTING.hex, "x", 720));
-        maturityLegend.add(java.util.Map.of("label", ComponentItem.Maturity.INITIAL.displayName, "color", ComponentItem.Maturity.INITIAL.hex, "x", 860));
-        maturityLegend.add(java.util.Map.of("label", ComponentItem.Maturity.REPEATABLE.displayName, "color", ComponentItem.Maturity.REPEATABLE.hex, "x", 1000));
-        maturityLegend.add(java.util.Map.of("label", ComponentItem.Maturity.DEFINED.displayName, "color", ComponentItem.Maturity.DEFINED.hex, "x", 1140));
-        maturityLegend.add(java.util.Map.of("label", ComponentItem.Maturity.MANAGED.displayName, "color", ComponentItem.Maturity.MANAGED.hex, "x", 1280));
-        maturityLegend.add(java.util.Map.of("label", ComponentItem.Maturity.OPTIMISED.displayName, "color", ComponentItem.Maturity.OPTIMISED.hex, "x", 1420));
+        maturityLegend.add(legendEntry(ComponentItem.Maturity.NOT_EXISTING.displayName, ComponentItem.Maturity.NOT_EXISTING.hex, 720));
+        maturityLegend.add(legendEntry(ComponentItem.Maturity.INITIAL.displayName, ComponentItem.Maturity.INITIAL.hex, 860));
+        maturityLegend.add(legendEntry(ComponentItem.Maturity.REPEATABLE.displayName, ComponentItem.Maturity.REPEATABLE.hex, 1000));
+        maturityLegend.add(legendEntry(ComponentItem.Maturity.DEFINED.displayName, ComponentItem.Maturity.DEFINED.hex, 1140));
+        maturityLegend.add(legendEntry(ComponentItem.Maturity.MANAGED.displayName, ComponentItem.Maturity.MANAGED.hex, 1280));
+        maturityLegend.add(legendEntry(ComponentItem.Maturity.OPTIMISED.displayName, ComponentItem.Maturity.OPTIMISED.hex, 1420));
+
+        int svgHeight = legendY + LEGEND_HEIGHT + BOTTOM_MARGIN;
+        float mmPerPixel = A4_WIDTH_MM / canvasWidth;
+        float svgHeightMm = svgHeight * mmPerPixel;
 
         TemplateInstance data = dashboard
             .data("title", title)
-            .data("governanceTitle", gov != null ? gov.title : null)
+            .data("governanceTitle", gov != null ? govTitle : null)
             .data("governanceItems", governanceItems)
-            .data("capabilitiesTitle", capabilities != null ? capabilities.title : null)
+            .data("capabilitiesTitle", capabilities != null ? sanitizeNullable(capabilities.title) : null)
             .data("capabilitiesHeaderY", (int) capabilitiesHeaderY)
             .data("capabilitiesTextY", (int) capabilitiesHeaderTextY)
             .data("capabilitiesIconY", (int) capabilitiesIconY)
@@ -284,10 +300,15 @@ public class SvgService {
             .data("boxW", (int) boxW)
             .data("boxH", (int) boxH)
             .data("halfBoxW", boxW / 2f)
-            .data("pageCenter", 700) // viewBox width 1400 -> center 700
+            .data("pageCenter", (int)(canvasWidth / 2f))
             .data("legendY", legendY)
             .data("statusLegend", statusLegend)
-            .data("maturityLegend", maturityLegend);
+            .data("maturityLegend", maturityLegend)
+            .data("initiativeGradients", initiativeGradients)
+            .data("canvasWidth", (int) canvasWidth)
+            .data("svgHeight", svgHeight)
+            .data("svgHeightMm", svgHeightMm)
+            .data("a4WidthMm", A4_WIDTH_MM);
             // coordinates for initiatives badge inside a box (local to group)
             data = data
             .data("initiativeCircleX", (int)(boxW - 10))
@@ -323,6 +344,41 @@ public class SvgService {
         item.textAnchor = hasDecorations ? "start" : "middle";
         item.textX = hasDecorations ? textLeftX : textCenterX;
         item.iconX = iconPosX;
+    }
+
+    private String computeInitiativeStroke(ComponentItem comp, String baseId, java.util.List<InitiativeGradient> gradients) {
+        if (comp == null || comp.initiatives <= 0) {
+            return "#FFFFFF";
+        }
+        String rag = comp.iRag;
+        if (rag == null) {
+            return "#FFFFFF";
+        }
+        String normalized = rag.replaceAll("[^RAGrag]", "").toUpperCase();
+        if (normalized.isEmpty()) {
+            return "#FFFFFF";
+        }
+        String gradientId = baseId + "_initiative";
+        InitiativeGradient gradient = new InitiativeGradient(gradientId);
+        int len = normalized.length();
+        for (int i = 0; i < len; i++) {
+            float start = (float) i / len;
+            float end = (float) (i + 1) / len;
+            String color = colorForInitiativeRag(normalized.charAt(i));
+            gradient.stops.add(new GradientStop(start * 100f, color));
+            gradient.stops.add(new GradientStop(end * 100f, color));
+        }
+        gradients.add(gradient);
+        return "url(#" + gradientId + ")";
+    }
+
+    private String colorForInitiativeRag(char c) {
+        switch (c) {
+            case 'R': return "#DC2626"; // red
+            case 'A': return "#F97316"; // amber
+            case 'G': return "#22C55E"; // green
+            default: return "#FFFFFF";
+        }
     }
 
     private java.util.List<DomainColumnLayout> buildDomainColumns(java.util.List<Domain> domains, float boxWidth, float spaceWidth, int maxRowsPerColumn) {
@@ -432,6 +488,60 @@ public class SvgService {
         return trimmed + "...";
     }
 
+    private java.util.List<String> escapeLines(java.util.List<String> lines) {
+        if (lines == null || lines.isEmpty()) {
+            return java.util.Collections.singletonList("");
+        }
+        java.util.List<String> escaped = new java.util.ArrayList<>(lines.size());
+        for (String line : lines) {
+            escaped.add(escapeXml(line));
+        }
+        return escaped;
+    }
+
+    private String sanitizeNullable(String value) {
+        return value == null ? null : escapeXml(value);
+    }
+
+    private String escapeXml(String value) {
+        if (value == null || value.isEmpty()) {
+            return value == null ? "" : value;
+        }
+        StringBuilder sb = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            switch (c) {
+                case '&':
+                    sb.append("&amp;");
+                    break;
+                case '<':
+                    sb.append("&lt;");
+                    break;
+                case '>':
+                    sb.append("&gt;");
+                    break;
+                case '\"':
+                    sb.append("&quot;");
+                    break;
+                case '\'':
+                    sb.append("&#39;");
+                    break;
+                default:
+                    sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    private java.util.Map<String, Object> legendEntry(String label, String color, int x) {
+        java.util.Map<String, Object> entry = new java.util.LinkedHashMap<>();
+        String safeLabel = sanitizeNullable(label);
+        entry.put("label", safeLabel != null ? safeLabel : "");
+        entry.put("color", color);
+        entry.put("x", x);
+        return entry;
+    }
+
     private static class DomainSectionChunk {
         final String domainName;
         final String iconId;
@@ -479,5 +589,24 @@ public class SvgService {
         float rowY;
         float width;
         DomainGroup primaryGroup;
+    }
+
+    private static class InitiativeGradient {
+        public final String id;
+        public final java.util.List<GradientStop> stops = new java.util.ArrayList<>();
+
+        InitiativeGradient(String id) {
+            this.id = id;
+        }
+    }
+
+    private static class GradientStop {
+        public final float offset;
+        public final String color;
+
+        GradientStop(float offset, String color) {
+            this.offset = offset;
+            this.color = color;
+        }
     }
 }

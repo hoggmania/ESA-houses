@@ -52,6 +52,9 @@ public class ComponentItem {
     public String rag; // e.g., "green"|"amber"|"red"
     public String summary;
     public int initiatives; // number of related initiatives; if >0 render badge
+    @JsonProperty("iRag")
+    @JsonAlias({"iRAG", "initiativeRag"})
+    public String iRag; // e.g., "RAG" string describing initiative statuses
     public boolean doubleBorder; // if true, render with double border
     public String icon; // optional logical icon key, e.g., "shield","lock","scan","waf"
 
@@ -62,7 +65,7 @@ public class ComponentItem {
     public String toString() {
         return "ComponentItem [capability=" + capability + ", name=" + name + ", status="
                 + status + ", maturity=" + maturity + ", rag=" + rag + ", summary=" + summary + ", initiatives="
-                + initiatives + ", doubleBorder=" + doubleBorder + "]";
+                + initiatives + ", iRag=" + iRag + ", doubleBorder=" + doubleBorder + "]";
     }
 
     

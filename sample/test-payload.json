@@ -4,10 +4,10 @@
     "governance": {
         "title": "Application Security Governance",
         "components": [
-            {"name":"Governance Strategy","maturity":"MANAGED","status":"HIGH","doubleBorder":true},
-            {"name":"Architectural Design Principle","maturity":"DEFINED","status":"MEDIUM","doubleBorder":true},
-            {"name":"Strategy & Metrics","maturity":"MANAGED","status":"HIGH","doubleBorder":true},
-            {"name":"Technology Enhancement","maturity":"DEFINED","status":"HIGH","doubleBorder":true},
+            {"name":"Governance Strategy","maturity":"MANAGED","status":"HIGH","doubleBorder":true,"icon":"increase"},
+            {"name":"Architectural Design Principle","maturity":"DEFINED","status":"MEDIUM","doubleBorder":true,"icon":"decrease"},
+            {"name":"Strategy & Metrics","maturity":"MANAGED","status":"HIGH","doubleBorder":true,"icon":"rebaseline", "rag":"red"},
+            {"name":"Technology Enhancement","maturity":"DEFINED","status":"HIGH","doubleBorder":true,"icon":"new"},
             {"name":"Training & Awareness","maturity":"MANAGED","status":"HIGH","doubleBorder":true},
             {"name":"Security Policy & Compliance","maturity":"DEFINED","status":"HIGH","doubleBorder":true},
             {"name":"Risk & Compliance Management","maturity":"MANAGED","status":"HIGH","doubleBorder":true},
@@ -36,7 +36,7 @@
                 "domain":"Secure Developer Services",
                 "icon": "steer",
                 "components": [
-                    {"name":"Cryptography Managemnet","maturity":"DEFINED","status":"MEDIUM"},
+                    {"name":"Cryptography Management","maturity":"DEFINED","status":"MEDIUM"},
                     {"name":"IAM","maturity":"DEFINED","status":"MEDIUM"}
                 ]
             },
@@ -46,8 +46,8 @@
                 "components": [
                     {"name":"Pen Testing","maturity":"OPTIMISED","status":"HIGH"},
                     {"name":"API Security & Scanning","maturity":"REPEATABLE","status":"LOW"},
-                    {"name":"Static Code Scanning (SAST)","maturity":"MANAGED","status":"HIGH","icon":"search","initiatives":1},
-                    {"name":"Software Composition Analysis(SCA)","maturity":"OPTIMISED","status":"EFFECTIVE","initiatives":2},
+                    {"name":"Static Code Scanning (SAST)","maturity":"MANAGED","status":"HIGH","initiatives":1},
+                    {"name":"Software Composition Analysis(SCA)","maturity":"OPTIMISED","status":"EFFECTIVE","initiatives":2, "iRag":"RG"},
                     {"name":"Developer self-service","maturity":"MANAGED","status":"HIGH"},
                     {"name":"Reporting & Analytics","maturity":"DEFINED","status":"MEDIUM","initiatives":1},
                     {"name":"Image Scanning","maturity":"DEFINED","status":"HIGH"},
@@ -55,7 +55,7 @@
                     {"name":"Repository Scanning","maturity":"REPEATABLE","status":"MEDIUM","initiatives":1},
                     {"name":"Issue Management","maturity":"MANAGED","status":"HIGH"},
                     {"name":"CI/CD Gating","maturity":"MANAGED","status":"HIGH","initiatives":1},
-                    {"name":"Secret Scanning ","maturity":"INITIAL","status":"LOW","initiatives":3}
+                    {"name":"Secret Scanning ","maturity":"INITIAL","status":"LOW","initiatives":3, "iRag":"RAG"}
                 ]
             },
             {

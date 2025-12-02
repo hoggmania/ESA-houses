@@ -20,6 +20,7 @@ public class RenderItem {
     public float textX;
     public String textAnchor;
     public float iconX;
+    public String initiativeStroke;
 
     public RenderItem() {}
 
@@ -45,6 +46,7 @@ public class RenderItem {
         this.textX = 0;
         this.textAnchor = "middle";
         this.iconX = 0;
+        this.initiativeStroke = "#FFFFFF";
     }
 
     public boolean hasInitiatives() {

@@ -13,13 +13,37 @@
     .canvas { overflow: auto; border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #fafafa; }
     .svg-wrapper { display: inline-block; }
   </style>
+  <script>
+    function downloadSvg() {
+      const payload = document.getElementById('rendered-payload').value;
+      fetch('/ui/svg', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain; charset=UTF-8' },
+        body: payload
+      }).then(async res => {
+        if (!res.ok) {
+          throw new Error(await res.text());
+        }
+        const svgText = await res.text();
+        const blob = new Blob([svgText], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'dashboard.svg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }).catch(err => {
+        alert('Failed to download SVG: ' + err);
+      });
+    }
+  </script>
 </head>
 <body>
+  <textarea id="rendered-payload" hidden>{payload.raw}</textarea>
   <div class="actions">
-    <form method="post" action="/ui/png">
-      <input type="hidden" name="payload" value="{payload}">
-      <button type="submit">Download PNG</button>
-    </form>
+    <button type="button" onclick="downloadSvg()">Download SVG</button>
     <a href="/ui"><button type="button" class="secondary">Back</button></a>
   </div>
 
