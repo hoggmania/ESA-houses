@@ -1,0 +1,15 @@
+# Build artifacts
+/target/
+/out/
+/sample/
+
+# IDE settings
+/.vscode/
+/.idea/
+
+# OS clutter
+/.DS_Store
+/Thumbs.db
+
+# Logs
+*.log
