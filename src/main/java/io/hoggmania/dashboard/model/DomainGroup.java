@@ -5,6 +5,7 @@ import java.util.List;
 public class DomainGroup {
     public String domainName;
     public String icon; // optional icon to render next to domain heading
+    public String domainHref;
     public List<RenderItem> items;
     public float headerX;
     public float headerY;

@@ -141,12 +141,24 @@
   <!-- ESA icon in main title -->
   <use xlink:href="#{esaIcon}" x="18" y="13" width="18" height="18" style="color: #FFFFFF"/>
   {/if}
-  <text x="{pageCenter}" y="33" text-anchor="middle" style="font: 18px sans-serif; font-weight: bold; fill: #FFFFFF;">{title ?: "Dashboard"}</text>
+  {#if titleHref}
+  <a xlink:href="{titleHref}" target="_blank" rel="noopener noreferrer">
+  {/if}
+  <text x="{pageCenter}" y="33" text-anchor="middle" style="font: 18px sans-serif; font-weight: bold; fill: #FFFFFF;{#if titleHref} text-decoration: underline;{/if}">{title ?: "Dashboard"}</text>
+  {#if titleHref}
+  </a>
+  {/if}
 
   <!-- Governance Section -->
   {#if governanceTitle}
   <rect x="10" y="50" width="1380" height="25" rx="3" fill="#1E3A8A"/>
-  <text x="{pageCenter}" y="68" text-anchor="middle" style="font: 14px sans-serif; font-weight: bold; fill: #FFFFFF;">{governanceTitle}</text>
+  {#if governanceTitleHref}
+  <a xlink:href="{governanceTitleHref}" target="_blank" rel="noopener noreferrer">
+  {/if}
+  <text x="{pageCenter}" y="68" text-anchor="middle" style="font: 14px sans-serif; font-weight: bold; fill: #FFFFFF;{#if governanceTitleHref} text-decoration: underline;{/if}">{governanceTitle}</text>
+  {#if governanceTitleHref}
+  </a>
+  {/if}
   {/if}
   
   {#for item in governanceItems}
@@ -162,16 +174,28 @@
       {#if item.iconId}
       <use xlink:href="#{item.iconId}" x="{item.iconX}" y="0" width="20" height="20" style="color: #111"/>
       {/if}
-      <text x="{item.textX}" y="22" text-anchor="{item.textAnchor}" style="font: 14px sans-serif; font-weight: bold; fill: #111;">
+      {#if item.nameHref}
+      <a xlink:href="{item.nameHref}" target="_blank" rel="noopener noreferrer">
+      {/if}
+      <text x="{item.textX}" y="22" text-anchor="{item.textAnchor}" style="font: 14px sans-serif; font-weight: bold; fill: #111;{#if item.nameHref} text-decoration: underline;{/if}">
         {#for line in item.nameLines}
         <tspan x="{item.textX}" dy="{line_index == 0 ? '0' : '14'}">{line}</tspan>
         {/for}
       </text>
-      <text x="{item.textX}" y="40" text-anchor="{item.textAnchor}" style="font: 11px sans-serif; fill: #555;">
+      {#if item.nameHref}
+      </a>
+      {/if}
+      {#if item.capabilityHref}
+      <a xlink:href="{item.capabilityHref}" target="_blank" rel="noopener noreferrer">
+      {/if}
+      <text x="{item.textX}" y="40" text-anchor="{item.textAnchor}" style="font: 11px sans-serif; fill: #555;{#if item.capabilityHref} text-decoration: underline;{/if}">
         {#for line in item.capabilityLines}
         <tspan x="{item.textX}" dy="{line_index == 0 ? '0' : '12'}">{line}</tspan>
         {/for}
       </text>
+      {#if item.capabilityHref}
+      </a>
+      {/if}
         {#if item.showInitiatives}
         <circle cx="{initiativeCircleX}" cy="{initiativeCircleY}" r="12" fill="#EC4899" stroke="{item.initiativeStroke}" stroke-width="3"/>
         <text x="{initiativeCircleX}" y="{initiativeTextY}" text-anchor="middle" style="font: 11px sans-serif; font-weight: bold; fill: #FFFFFF;">{item.initiatives}</text>
@@ -186,7 +210,13 @@
   <!-- Capabilities icon in section title -->
   <use xlink:href="#{capabilitiesIcon}" x="18" y="{capabilitiesIconY}" width="16" height="16" style="color: #FFFFFF"/>
   {/if}
-  <text x="{pageCenter}" y="{capabilitiesTextY}" text-anchor="middle" style="font: 14px sans-serif; font-weight: bold; fill: #FFFFFF;">{capabilitiesTitle}</text>
+  {#if capabilitiesTitleHref}
+  <a xlink:href="{capabilitiesTitleHref}" target="_blank" rel="noopener noreferrer">
+  {/if}
+  <text x="{pageCenter}" y="{capabilitiesTextY}" text-anchor="middle" style="font: 14px sans-serif; font-weight: bold; fill: #FFFFFF;{#if capabilitiesTitleHref} text-decoration: underline;{/if}">{capabilitiesTitle}</text>
+  {#if capabilitiesTitleHref}
+  </a>
+  {/if}
   {/if}
 
   {#for domain in domainGroups}
@@ -198,7 +228,13 @@
       <!-- Domain icon in column title -->
       <use xlink:href="#{domain.icon}" x="6" y="{domain.headerIconY}" width="14" height="14" style="color: #FFFFFF"/>
       {/if}
-      <text x="{domain.headerTextX}" y="{domain.headerTextY}" text-anchor="middle" style="font: 12px sans-serif; font-weight: bold; fill: #FFFFFF;">{domain.domainName}</text>
+      {#if domain.domainHref}
+      <a xlink:href="{domain.domainHref}" target="_blank" rel="noopener noreferrer">
+      {/if}
+      <text x="{domain.headerTextX}" y="{domain.headerTextY}" text-anchor="middle" style="font: 12px sans-serif; font-weight: bold; fill: #FFFFFF;{#if domain.domainHref} text-decoration: underline;{/if}">{domain.domainName}</text>
+      {#if domain.domainHref}
+      </a>
+      {/if}
     </g>
     {/if}
     
@@ -216,16 +252,28 @@
         {#if item.iconId}
         <use xlink:href="#{item.iconId}" x="{item.iconX}" y="0" width="20" height="20" style="color: #111"/>
         {/if}
-        <text x="{item.textX}" y="22" text-anchor="{item.textAnchor}" style="font: 14px sans-serif; font-weight: bold; fill: #111;">
+        {#if item.nameHref}
+        <a xlink:href="{item.nameHref}" target="_blank" rel="noopener noreferrer">
+        {/if}
+        <text x="{item.textX}" y="22" text-anchor="{item.textAnchor}" style="font: 14px sans-serif; font-weight: bold; fill: #111;{#if item.nameHref} text-decoration: underline;{/if}">
           {#for line in item.nameLines}
           <tspan x="{item.textX}" dy="{line_index == 0 ? '0' : '14'}">{line}</tspan>
           {/for}
         </text>
-        <text x="{item.textX}" y="40" text-anchor="{item.textAnchor}" style="font: 11px sans-serif; fill: #555;">
+        {#if item.nameHref}
+        </a>
+        {/if}
+        {#if item.capabilityHref}
+        <a xlink:href="{item.capabilityHref}" target="_blank" rel="noopener noreferrer">
+        {/if}
+        <text x="{item.textX}" y="40" text-anchor="{item.textAnchor}" style="font: 11px sans-serif; fill: #555;{#if item.capabilityHref} text-decoration: underline;{/if}">
           {#for line in item.capabilityLines}
           <tspan x="{item.textX}" dy="{line_index == 0 ? '0' : '12'}">{line}</tspan>
           {/for}
         </text>
+        {#if item.capabilityHref}
+        </a>
+        {/if}
         {#if item.showInitiatives}
         <circle cx="{initiativeCircleX}" cy="{initiativeCircleY}" r="12" fill="#EC4899" stroke="{item.initiativeStroke}" stroke-width="3"/>
         <text x="{initiativeCircleX}" y="{initiativeTextY}" text-anchor="middle" style="font: 11px sans-serif; font-weight: bold; fill: #FFFFFF;">{item.initiatives}</text>

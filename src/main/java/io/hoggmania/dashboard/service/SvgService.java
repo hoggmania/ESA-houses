@@ -72,7 +72,8 @@ public class SvgService {
         final float textCenterX = boxW / 2f;
         final float iconPosX = boxW - 20f;
 
-        String title = sanitizeNullable(root != null ? root.title : null);
+        LinkText titleLink = parseLinkField(root != null ? root.title : null);
+        String title = sanitizeNullable(titleLink.text);
         java.util.List<InitiativeGradient> initiativeGradients = new java.util.ArrayList<>();
         float domainStartY = 230f;
         float capabilitiesHeaderY = 155f;
@@ -83,7 +84,9 @@ public class SvgService {
         // Governance items (horizontal row)
         java.util.List<RenderItem> governanceItems = new java.util.ArrayList<>();
         Governance gov = root != null ? root.governance : null;
-        String govTitle = gov != null ? sanitizeNullable(gov.title) : null;
+        LinkText govTitleLink = parseLinkField(gov != null ? gov.title : null);
+        String govTitle = gov != null ? sanitizeNullable(govTitleLink.text) : null;
+        String govTitleHref = govTitleLink.href;
         if (gov != null && gov.components != null) {
             float govStartX = 20f;
             float govCurrentX = govStartX;
@@ -109,10 +112,14 @@ public class SvgService {
 
                 String itemName = comp.name != null ? comp.name : "";
                 String itemCapability = comp.capability != null ? comp.capability : "";
+                LinkText nameLink = parseLinkField(itemName);
+                LinkText capabilityLink = parseLinkField(itemCapability);
+                String cleanName = nameLink.text != null ? nameLink.text : "";
+                String cleanCapability = capabilityLink.text != null ? capabilityLink.text : "";
                 governanceItems.add(new RenderItem(
                     x, y,
-                    itemName,
-                    itemCapability,
+                    cleanName,
+                    cleanCapability,
                     govTitle != null ? govTitle : "",
                     comp.status.hex,
                     comp.maturity.hex,
@@ -124,8 +131,10 @@ public class SvgService {
                 RenderItem lastGov = governanceItems.get(governanceItems.size()-1);
                 lastGov.initiatives = comp.initiatives;
                 lastGov.showInitiatives = lastGov.initiatives > 0;
-                lastGov.nameLines = escapeLines(wrapText(itemName, nameCharsPerLine, maxNameLines));
-                lastGov.capabilityLines = escapeLines(wrapText(itemCapability, capabilityCharsPerLine, maxCapabilityLines));
+                lastGov.nameLines = escapeLines(wrapText(cleanName, nameCharsPerLine, maxNameLines));
+                lastGov.capabilityLines = escapeLines(wrapText(cleanCapability, capabilityCharsPerLine, maxCapabilityLines));
+                lastGov.nameHref = nameLink.href;
+                lastGov.capabilityHref = capabilityLink.href;
                 lastGov.initiativeStroke = computeInitiativeStroke(comp, gradientId, initiativeGradients);
                 configureTextLayout(lastGov, textCenterX, textLeftX, iconPosX);
 
@@ -146,6 +155,9 @@ public class SvgService {
         // Capabilities domains (columns)
         java.util.List<DomainGroup> domainGroups = new java.util.ArrayList<>();
         Capabilities capabilities = root != null ? root.capabilities : null;
+        LinkText capabilitiesTitleLink = parseLinkField(capabilities != null ? capabilities.title : null);
+        String capabilitiesTitle = capabilities != null ? sanitizeNullable(capabilitiesTitleLink.text) : null;
+        String capabilitiesTitleHref = capabilitiesTitleLink.href;
         java.util.List<Domain> domains = capabilities != null ? capabilities.domains : null;
         int legendY = 0;
         if (domains != null) {
@@ -189,10 +201,14 @@ public class SvgService {
 
                         String itemName = comp.name != null ? comp.name : "";
                         String itemCapability = comp.capability != null ? comp.capability : "";
+                        LinkText nameLink2 = parseLinkField(itemName);
+                        LinkText capabilityLink2 = parseLinkField(itemCapability);
+                        String cleanName2 = nameLink2.text != null ? nameLink2.text : "";
+                        String cleanCapability2 = capabilityLink2.text != null ? capabilityLink2.text : "";
                         domainItems.add(new RenderItem(
                             currentX, y,
-                            itemName,
-                            itemCapability,
+                            cleanName2,
+                            cleanCapability2,
                             section.domainName,
                             comp.status.hex,
                             comp.maturity.hex,
@@ -205,13 +221,18 @@ public class SvgService {
                         RenderItem lastDomainItem = domainItems.get(domainItems.size()-1);
                         lastDomainItem.initiatives = comp.initiatives;
                         lastDomainItem.showInitiatives = lastDomainItem.initiatives > 0;
-                        lastDomainItem.nameLines = escapeLines(wrapText(itemName, nameCharsPerLine, maxNameLines));
-                        lastDomainItem.capabilityLines = escapeLines(wrapText(itemCapability, capabilityCharsPerLine, maxCapabilityLines));
+                        lastDomainItem.nameLines = escapeLines(wrapText(cleanName2, nameCharsPerLine, maxNameLines));
+                        lastDomainItem.capabilityLines = escapeLines(wrapText(cleanCapability2, capabilityCharsPerLine, maxCapabilityLines));
+                        lastDomainItem.nameHref = nameLink2.href;
+                        lastDomainItem.capabilityHref = capabilityLink2.href;
                         lastDomainItem.initiativeStroke = computeInitiativeStroke(comp, gradientId, initiativeGradients);
                         configureTextLayout(lastDomainItem, textCenterX, textLeftX, iconPosX);
                     }
 
-                    DomainGroup group = new DomainGroup(escapeXml(section.domainName), section.iconId, domainItems);
+                    LinkText domainLink = parseLinkField(section.domainName);
+                    String domainLabel = sanitizeNullable(domainLink.text);
+                    DomainGroup group = new DomainGroup(domainLabel != null ? domainLabel : "", section.iconId, domainItems);
+                    group.domainHref = domainLink.href;
                     group.headerX = currentX;
                     group.headerY = sectionStartY - headerOffset;
                     group.headerTextY = group.headerY + 15f;
@@ -288,9 +309,12 @@ public class SvgService {
 
         TemplateInstance data = dashboard
             .data("title", title)
+            .data("titleHref", titleLink.href)
             .data("governanceTitle", gov != null ? govTitle : null)
+            .data("governanceTitleHref", govTitleHref)
             .data("governanceItems", governanceItems)
-            .data("capabilitiesTitle", capabilities != null ? sanitizeNullable(capabilities.title) : null)
+            .data("capabilitiesTitle", capabilities != null ? capabilitiesTitle : null)
+            .data("capabilitiesTitleHref", capabilitiesTitleHref)
             .data("capabilitiesHeaderY", (int) capabilitiesHeaderY)
             .data("capabilitiesTextY", (int) capabilitiesHeaderTextY)
             .data("capabilitiesIconY", (int) capabilitiesIconY)
@@ -540,6 +564,43 @@ public class SvgService {
         entry.put("color", color);
         entry.put("x", x);
         return entry;
+    }
+
+    private LinkText parseLinkField(String value) {
+        if (value == null) {
+            return new LinkText(null, null);
+        }
+        String trimmed = value.trim();
+        if (trimmed.endsWith("]")) {
+            int open = trimmed.lastIndexOf('[');
+            if (open >= 0 && open < trimmed.length() - 1) {
+                String encodedUrl = trimmed.substring(open + 1, trimmed.length() - 1).trim();
+                if (!encodedUrl.isBlank()) {
+                    String label = trimmed.substring(0, open).trim();
+                    String decoded = decodeUrl(encodedUrl);
+                    return new LinkText(label.isEmpty() ? null : label, decoded);
+                }
+            }
+        }
+        return new LinkText(value, null);
+    }
+
+    private String decodeUrl(String value) {
+        try {
+            return java.net.URLDecoder.decode(value, java.nio.charset.StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException ex) {
+            return value;
+        }
+    }
+
+    private static class LinkText {
+        final String text;
+        final String href;
+
+        LinkText(String text, String href) {
+            this.text = text;
+            this.href = href;
+        }
     }
 
     private static class DomainSectionChunk {

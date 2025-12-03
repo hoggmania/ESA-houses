@@ -15,6 +15,8 @@ public class RenderItem {
     public boolean showInitiatives;
     public boolean doubleBorder; // if true, render double border
     public String iconId; // symbol id for icon, e.g., "icon-shield"
+    public String nameHref;
+    public String capabilityHref;
     public java.util.List<String> nameLines;
     public java.util.List<String> capabilityLines;
     public float textX;
@@ -41,6 +43,8 @@ public class RenderItem {
         this.showInitiatives = false;
         this.doubleBorder = doubleBorder;
         this.iconId = iconId;
+        this.nameHref = null;
+        this.capabilityHref = null;
         this.nameLines = java.util.Collections.singletonList(this.name != null ? this.name : "");
         this.capabilityLines = java.util.Collections.singletonList(this.capability != null ? this.capability : "");
         this.textX = 0;
