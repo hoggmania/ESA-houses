@@ -49,10 +49,10 @@
       });
     }
 
-    function renderText() {
+    function navigateToHtml(endpoint) {
       const payload = document.getElementById('payload').value;
       trySavePayload(payload);
-      fetch('/ui/render-text', {
+      fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: payload
@@ -64,6 +64,14 @@
       }).catch(err => {
         alert('Failed to render: ' + err);
       });
+    }
+
+    function renderText() {
+      navigateToHtml('/ui/render-text');
+    }
+
+    function renderInitiatives() {
+      navigateToHtml('/ui/render-initiatives');
     }
 
     window.addEventListener('DOMContentLoaded', hydratePayloadFromStorage);
@@ -81,6 +89,7 @@
     <textarea id="payload" name="payload" spellcheck="false">{payload}</textarea>
     <div class="row">
       <button type="button" onclick="renderText()">Render</button>
+      <button type="button" onclick="renderInitiatives()">Render Initiatives</button>
       <button type="button" class="secondary" onclick="pasteSample()">Paste Sample</button>
     </div>
   </form>

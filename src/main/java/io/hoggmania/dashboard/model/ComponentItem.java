@@ -1,5 +1,7 @@
 package io.hoggmania.dashboard.model;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -7,7 +9,6 @@ public class ComponentItem {
     public String capability; // e.g., "Static Code Scanning"
     public String name; // e.g., "SAST"
 
-    
     // Enumerations for status and maturity with associated HEX colors
     public enum Status {
         NOT_EXISTING("#908782", "Not Existing"),
@@ -58,6 +59,10 @@ public class ComponentItem {
     public boolean doubleBorder; // if true, render with double border
     public String icon; // optional logical icon key, e.g., "shield","lock","scan","waf"
 
+    @JsonProperty("initiative")
+    @JsonAlias({"initiativesDetail", "initiativeItems"})
+    public List<ComponentInitiative> initiativeDetails;
+
     // default ctor for Jackson
     public ComponentItem() {}
 
@@ -65,9 +70,7 @@ public class ComponentItem {
     public String toString() {
         return "ComponentItem [capability=" + capability + ", name=" + name + ", status="
                 + status + ", maturity=" + maturity + ", rag=" + rag + ", summary=" + summary + ", initiatives="
-                + initiatives + ", iRag=" + iRag + ", doubleBorder=" + doubleBorder + "]";
+                + initiatives + ", iRag=" + iRag + ", doubleBorder=" + doubleBorder + ", initiativeDetails="
+                + initiativeDetails + "]";
     }
-
-    
-
 }

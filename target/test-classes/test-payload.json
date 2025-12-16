@@ -4,42 +4,248 @@
     "governance": {
         "title": "Application Security Governance",
         "components": [
-            {"capability":"SAST","name":"Static Code Scanning","maturity":"MANAGED","status":"HIGH","icon":"search","initiatives":3,"doubleBorder":true,"rag":"green"},
-            {"capability":"RASP","name":"RASP Agent","maturity":"DEFINED","status":"MEDIUM","icon":"user","initiatives":0,"doubleBorder":false,"rag":"amber"}
-        ]
-    },
-    "capabilities": {
-      "title": "Application Security Capabilities",
-      "icon": "chart",
-      "domains": [
-        {
-                "domain":"Application Security Testing",
-                "icon": "group",
-                "components": [
-                    {"capability":"SAST","name":"Static Code Scanning","maturity":"MANAGED","status":"HIGH","icon":"search","initiatives":5,"doubleBorder":true,"rag":"green"},
-                    {"capability":"RASP","name":"RASP Agent","maturity":"DEFINED","status":"MEDIUM","icon":"user","initiatives":0,"doubleBorder":false,"rag":"amber"}
+            {
+                "capability": "SAST",
+                "name": "Static Code Scanning",
+                "maturity": "MANAGED",
+                "status": "HIGH",
+                "icon": "search",
+                "initiatives": 3,
+                "iRag": "green",
+                "doubleBorder": true,
+                "rag": "green",
+                "initiative": [
+                    {
+                        "key": "AS-001",
+                        "link": "https://example.com/initiatives/AS-001",
+                        "summary": "Expand SAST rules coverage across repositories.",
+                        "businessBenefit": "Detect critical vulnerabilities earlier in the SDLC.",
+                        "riskAppetite": "Low",
+                        "toolId": "In-Demand",
+                        "dueDate": "2024-12-15",
+                        "rag": "green"
+                    },
+                    {
+                        "key": "AS-001b",
+                        "link": "https://example.com/initiatives/AS-001b",
+                        "summary": "Introduce SAST guardrails in developer portals.",
+                        "businessBenefit": "Improve self-service security onboarding.",
+                        "riskAppetite": "Low",
+                        "toolId": "In-Demand",
+                        "dueDate": "2025-04-30",
+                        "rag": "green"
+                    }
                 ]
             },
             {
-                "domain":"RASP Security Testing",
+                "capability": "RASP",
+                "name": "RASP Agent",
+                "maturity": "DEFINED",
+                "status": "MEDIUM",
                 "icon": "user",
-                "components": [
-                    {"capability":"SAST","name":"Static Code Scanning","maturity":"REPEATABLE","status":"LOW","icon":"search","initiatives":2,"doubleBorder":false,"rag":"amber"},
-                    {"capability":"RASP","name":"RASP Agent","maturity":"INITIAL","status":"MEDIUM","icon":"user","initiatives":1,"doubleBorder":false,"rag":"red"}
-                ]
-            },
-            {
-                "domain":"SPACE",
-                "components": []
-            },
-            {
-                "domain":"DAST Security Testing",
-                "icon": "bug",
-                "components": [
-                    {"capability":"SAST","name":"Static Code Scanning","maturity":"OPTIMISED","status":"EFFECTIVE","icon":"search","initiatives":4,"doubleBorder":false,"rag":"green"},
-                    {"capability":"RASP","name":"RASP Agent","maturity":"DEFINED","status":"MEDIUM","icon":"user","initiatives":0,"doubleBorder":false,"rag":"amber"}
+                "initiatives": 0,
+                "iRag": "amber",
+                "doubleBorder": false,
+                "rag": "amber",
+                "initiative": [
+                    {
+                        "key": "AS-002",
+                        "link": "https://example.com/initiatives/AS-002",
+                        "summary": "Pilot RASP agents in key customer-facing services.",
+                        "businessBenefit": "Reduce exploitation risk in production.",
+                        "riskAppetite": "Medium",
+                        "toolId": "In-Demand",
+                        "dueDate": "2025-02-01",
+                        "rag": "amber"
+                    }
                 ]
             }
         ]
-    } 
+    },
+    "capabilities": {
+        "title": "Application Security Capabilities",
+        "icon": "chart",
+        "domains": [
+            {
+                "domain": "Application Security Testing",
+                "icon": "group",
+                "components": [
+                    {
+                        "capability": "SAST",
+                        "name": "Static Code Scanning",
+                        "maturity": "MANAGED",
+                        "status": "HIGH",
+                        "icon": "search",
+                        "initiatives": 5,
+                        "iRag": "green",
+                        "doubleBorder": true,
+                        "rag": "green",
+                        "initiative": [
+                            {
+                                "key": "AS-003",
+                                "link": "https://example.com/initiatives/AS-003",
+                                "summary": "Automate onboarding of repositories to the SAST pipeline.",
+                                "businessBenefit": "Increase coverage with minimal manual effort.",
+                                "riskAppetite": "Low",
+                                "toolId": "In-Demand",
+                                "dueDate": "2025-01-20",
+                                "rag": "green"
+                            }
+                        ]
+                    },
+                    {
+                        "capability": "RASP",
+                        "name": "RASP Agent",
+                        "maturity": "DEFINED",
+                        "status": "MEDIUM",
+                        "icon": "user",
+                        "initiatives": 0,
+                        "iRag": "amber",
+                        "doubleBorder": false,
+                        "rag": "amber",
+                        "initiative": [
+                            {
+                                "key": "AS-004",
+                                "link": "https://example.com/initiatives/AS-004",
+                                "summary": "Establish observability for deployed RASP agents.",
+                                "businessBenefit": "Improve telemetry for runtime protection.",
+                                "riskAppetite": "Medium",
+                                "toolId": "In-Demand",
+                                "dueDate": "2024-11-30",
+                                "rag": "amber"
+                            },
+                            {
+                                "key": "AS-004b",
+                                "link": "https://example.com/initiatives/AS-004b",
+                                "summary": "Codify alert playbooks for RASP detections.",
+                                "businessBenefit": "Accelerate runtime incident response.",
+                                "riskAppetite": "Medium",
+                                "toolId": "In-Demand",
+                                "dueDate": "2025-03-15",
+                                "rag": "amber"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "domain": "RASP Security Testing",
+                "icon": "user",
+                "components": [
+                    {
+                        "capability": "SAST",
+                        "name": "Static Code Scanning",
+                        "maturity": "REPEATABLE",
+                        "status": "LOW",
+                        "icon": "search",
+                        "initiatives": 2,
+                        "iRag": "amber",
+                        "doubleBorder": false,
+                        "rag": "amber",
+                        "initiative": [
+                            {
+                                "key": "AS-005",
+                                "link": "https://example.com/initiatives/AS-005",
+                                "summary": "Shift-left RASP fuzzing scenarios into CI.",
+                                "businessBenefit": "Catch runtime issues before production.",
+                                "riskAppetite": "Medium",
+                                "toolId": "In-Demand",
+                                "dueDate": "2024-10-10",
+                                "rag": "amber"
+                            }
+                        ]
+                    },
+                    {
+                        "capability": "RASP",
+                        "name": "RASP Agent",
+                        "maturity": "INITIAL",
+                        "status": "MEDIUM",
+                        "icon": "user",
+                        "initiatives": 1,
+                        "iRag": "red",
+                        "doubleBorder": false,
+                        "rag": "red",
+                        "initiative": [
+                            {
+                                "key": "AS-006",
+                                "link": "https://example.com/initiatives/AS-006",
+                                "summary": "Harden agent policies for critical services.",
+                                "businessBenefit": "Mitigate emergent runtime threats.",
+                                "riskAppetite": "High",
+                                "toolId": "In-Demand",
+                                "dueDate": "2024-09-01",
+                                "rag": "red"
+                            },
+                            {
+                                "key": "AS-006b",
+                                "link": "https://example.com/initiatives/AS-006b",
+                                "summary": "Add runtime chaos drills to validate agent policies.",
+                                "businessBenefit": "Validate RASP posture against real-world attacks.",
+                                "riskAppetite": "High",
+                                "toolId": "In-Demand",
+                                "dueDate": "2024-11-05",
+                                "rag": "red"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "domain": "SPACE",
+                "components": []
+            },
+            {
+                "domain": "DAST Security Testing",
+                "icon": "bug",
+                "components": [
+                    {
+                        "capability": "SAST",
+                        "name": "Static Code Scanning",
+                        "maturity": "OPTIMISED",
+                        "status": "EFFECTIVE",
+                        "icon": "search",
+                        "initiatives": 4,
+                        "iRag": "green",
+                        "doubleBorder": false,
+                        "rag": "green",
+                        "initiative": [
+                            {
+                                "key": "AS-007",
+                                "link": "https://example.com/initiatives/AS-007",
+                                "summary": "Deploy auto-remediation PRs for high-risk findings.",
+                                "businessBenefit": "Shorten mean-time-to-remediate vulnerabilities.",
+                                "riskAppetite": "Low",
+                                "toolId": "In-Demand",
+                                "dueDate": "2025-03-31",
+                                "rag": "green"
+                            }
+                        ]
+                    },
+                    {
+                        "capability": "RASP",
+                        "name": "RASP Agent",
+                        "maturity": "DEFINED",
+                        "status": "MEDIUM",
+                        "icon": "user",
+                        "initiatives": 0,
+                        "iRag": "amber",
+                        "doubleBorder": false,
+                        "rag": "amber",
+                        "initiative": [
+                            {
+                                "key": "AS-008",
+                                "link": "https://example.com/initiatives/AS-008",
+                                "summary": "Roll out agent updates across hybrid cloud estates.",
+                                "businessBenefit": "Maintain runtime protection parity across platforms.",
+                                "riskAppetite": "Medium",
+                                "toolId": "In-Demand",
+                                "dueDate": "2024-12-01",
+                                "rag": "amber"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
 }

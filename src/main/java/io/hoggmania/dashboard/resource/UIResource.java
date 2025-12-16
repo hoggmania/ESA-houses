@@ -2,6 +2,7 @@ package io.hoggmania.dashboard.resource;
 
 import io.hoggmania.dashboard.model.ESA;
 import io.hoggmania.dashboard.service.SvgService;
+import io.hoggmania.dashboard.service.InitiativesPageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
@@ -24,6 +25,9 @@ public class UIResource {
 
     @Inject
     SvgService svgService;
+
+    @Inject
+    InitiativesPageService initiativesPageService;
 
     @Inject
     ObjectMapper objectMapper;
@@ -101,7 +105,12 @@ public class UIResource {
         try {
             ESA esa = objectMapper.readValue(payload, ESA.class);
             String svg = svgService.renderSvg(esa);
-            TemplateInstance ti = resultTemplate.data("svg", svg).data("payload", payload).data("error", null);
+            String initiatives = initiativesPageService.renderInitiativesFragment(esa);
+            TemplateInstance ti = resultTemplate
+                .data("svg", svg)
+                .data("initiatives", initiatives)
+                .data("payload", payload)
+                .data("error", null);
             String html = ti.render();
             return Response.ok(html).type(MediaType.TEXT_HTML).build();
         } catch (Exception e) {
@@ -120,8 +129,30 @@ public class UIResource {
         try {
             ESA esa = objectMapper.readValue(payload, ESA.class);
             String svg = svgService.renderSvg(esa);
-            TemplateInstance ti = resultTemplate.data("svg", svg).data("payload", payload).data("error", null);
+            String initiatives = initiativesPageService.renderInitiativesFragment(esa);
+            TemplateInstance ti = resultTemplate
+                .data("svg", svg)
+                .data("initiatives", initiatives)
+                .data("payload", payload)
+                .data("error", null);
             String html = ti.render();
+            return Response.ok(html).type(MediaType.TEXT_HTML).build();
+        } catch (Exception e) {
+            String error = e.getMessage();
+            TemplateInstance ti = formTemplate.data("message", error).data("payload", payload == null ? "" : payload);
+            String html = ti.render();
+            return Response.status(Response.Status.BAD_REQUEST).entity(html).type(MediaType.TEXT_HTML).build();
+        }
+    }
+
+    @POST
+    @Path("/render-initiatives")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_HTML)
+    public Response renderInitiatives(String payload) {
+        try {
+            ESA esa = objectMapper.readValue(payload, ESA.class);
+            String html = initiativesPageService.renderInitiativesPage(esa, payload);
             return Response.ok(html).type(MediaType.TEXT_HTML).build();
         } catch (Exception e) {
             String error = e.getMessage();

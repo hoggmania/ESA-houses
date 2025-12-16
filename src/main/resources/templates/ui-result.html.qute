@@ -10,8 +10,11 @@
     .actions { display: flex; gap: 12px; margin-bottom: 16px; }
     button { appearance: none; background: #0d6efd; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
     button.secondary { background: #6c757d; }
-    .canvas { overflow: auto; border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #fafafa; }
-    .svg-wrapper { display: inline-block; }
+    .panels { display: flex; flex-direction: column; gap: 20px; }
+    .panel { border: 1px solid #ddd; border-radius: 10px; background: #fafafa; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .panel h2 { margin-top: 0; color: #1E3A8A; }
+    .svg-wrapper { overflow: auto; }
+    .initiatives-wrapper { max-height: 900px; overflow: auto; background: white; border-radius: 8px; }
   </style>
   <script>
     function downloadSvg() {
@@ -47,9 +50,18 @@
     <a href="/ui"><button type="button" class="secondary">Back</button></a>
   </div>
 
-  <div class="canvas">
-    <div class="svg-wrapper">
-      {svg.raw}
+  <div class="panels">
+    <div class="panel">
+      <h2>ESA House</h2>
+      <div class="svg-wrapper">
+        {svg.raw}
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Initiatives</h2>
+      <div class="initiatives-wrapper">
+        {initiatives.raw}
+      </div>
     </div>
   </div>
 </body>

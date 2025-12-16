@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hoggmania.dashboard.model.ESA;
 import io.hoggmania.dashboard.service.SvgService;
+import io.hoggmania.dashboard.service.InitiativesPageService;
 import io.hoggmania.dashboard.exception.ValidationException;
 
 import jakarta.inject.Inject;
@@ -16,6 +17,7 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
@@ -25,6 +27,9 @@ public class DashboardResource {
 
     @Inject
     SvgService svgService;
+
+    @Inject
+    InitiativesPageService initiativesPageService;
 
     @Inject
     ObjectMapper mapper;
@@ -39,6 +44,7 @@ public class DashboardResource {
             @RequestBody(required = true,
                 content = @Content(
                     mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ESA.class),
                     examples = {
                         @ExampleObject(name = "sample",
                             description = "Sample hierarchical payload with valid Status and Maturity enum values",
@@ -68,6 +74,7 @@ public class DashboardResource {
             @RequestBody(required = true,
                 content = @Content(
                     mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ESA.class),
                     examples = {
                         @ExampleObject(name = "sample",
                             description = "Sample hierarchical payload with valid Status and Maturity enum values",
@@ -98,6 +105,7 @@ public class DashboardResource {
             @RequestBody(required = true,
                 content = @Content(
                     mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ESA.class),
                     examples = {
                         @ExampleObject(name = "sample",
                             description = "Sample hierarchical payload with valid Status and Maturity enum values",
@@ -143,6 +151,37 @@ public class DashboardResource {
             "</body>\n" +
             "</html>";
         
+        return Response.ok(html).build();
+    }
+
+    @POST
+    @Path("/initiatives")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_HTML)
+    @Operation(summary = "Render initiatives page", description = "Renders an HTML page listing every embedded initiative.")
+    @APIResponse(responseCode = "200", description = "HTML initiatives table", content = @Content(mediaType = MediaType.TEXT_HTML))
+    public Response initiatives(
+            @RequestBody(required = true,
+                content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ESA.class),
+                    examples = {
+                        @ExampleObject(name = "sample",
+                            description = "Payload containing initiative arrays under each component",
+                            value = "{\n    \"title\": \"Application Security\",\n    \"icon\": \"shield\",\n    \"governance\": {\n        \"title\": \"Application Security Governance\",\n        \"components\": [\n            {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":3,\"doubleBorder\":true,\"rag\":\"green\",\"initiative\":[{\"key\":\"AS-001\",\"summary\":\"Expand SAST rules coverage\",\"businessBenefit\":\"Catch issues earlier\",\"dueDate\":\"2024-12-15\",\"rag\":\"green\"}]}\n        ]\n    },\n    \"capabilities\": {\n      \"title\": \"Application Security Capabilities\",\n      \"icon\": \"chart\",\n      \"domains\": [\n        {\n                \"domain\":\"Application Security Testing\",\n                \"icon\": \"group\",\n                \"components\": [\n                    {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":5,\"doubleBorder\":true,\"rag\":\"green\",\"initiative\":[{\"key\":\"AS-003\",\"summary\":\"Automate onboarding\",\"businessBenefit\":\"Increase coverage\",\"dueDate\":\"2025-01-20\",\"rag\":\"green\"}]}\n                ]\n            }\n        ]\n    } \n}"
+                        )
+                    }
+                )
+            ) JsonNode model) {
+        if (model == null || model.isNull()) {
+            throw new ValidationException("Request body cannot be null or empty");
+        }
+        ESA esa = mapper.convertValue(model, ESA.class);
+        String payloadRaw = null;
+        try {
+            payloadRaw = mapper.writeValueAsString(model);
+        } catch (Exception ignored) {}
+        String html = initiativesPageService.renderInitiativesPage(esa, payloadRaw);
         return Response.ok(html).build();
     }
 }
