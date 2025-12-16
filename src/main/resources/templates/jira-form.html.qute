@@ -27,7 +27,7 @@
   <div class="hint">
     Expected hierarchy:
     <ul>
-      <li>Root issue has labels <code>ESA</code> and <code>ESA-Root:&#123;name&#125;</code>.</li>
+      <li>Set the Jira location (e.g. <code>https://cti-jira.nam.nsroot.net/jira</code>) and ensure the root issue has labels <code>ESA</code> and <code>ESA-Root:&#123;name&#125;</code>.</li>
       <li>Linked issue labelled <code>ESA-Governance</code> &rarr; Features become governance tiles.</li>
       <li>Linked issue labelled <code>ESA-Capabilities</code> &rarr; Epics mapped to Domains, their Features mapped to Capability tiles.</li>
       <li>Capability tiles derive Capability/Maturity/Status/RAG from labels such as <code>ESA-Capability:SAST</code>, <code>ESA-Maturity:MANAGED</code>, etc.</li>
@@ -40,10 +40,12 @@
   {/if}
 
   <form method="post" action="/ui/jira/generate">
+    <label for="jiraBase">Jira location</label>
+    <input type="text" id="jiraBase" name="jiraBase" required value="{jiraBase ?: ''}" placeholder="https://your-domain.atlassian.net"/>
     <label for="jiraUrl">Jira issue URL or key</label>
     <input type="text" id="jiraUrl" name="jiraUrl" required value="{jiraUrl ?: ''}" placeholder="https://your-domain.atlassian.net/browse/ESA-123"/>
     <label for="jiraToken">Personal Access Token</label>
-    <input type="password" id="jiraToken" name="jiraToken" placeholder="Paste your Jira PAT" autocomplete="off"/>
+    <input type="password" id="jiraToken" name="jiraToken" placeholder="Paste your Jira PAT" autocomplete="off" required/>
     <div class="row">
       <button type="submit">Fetch &amp; Generate JSON</button>
       <a href="/ui"><button type="button" class="secondary">Back</button></a>

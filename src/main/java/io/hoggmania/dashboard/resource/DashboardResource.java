@@ -25,6 +25,30 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Tag(name = "Dashboard", description = "Render dashboard SVG or PNG from a JSON model")
 public class DashboardResource {
 
+    public static final String SAMPLE_PAYLOAD = "{\n" +
+        "  \"title\": \"Application Security\",\n" +
+        "  \"icon\": \"shield\",\n" +
+        "  \"governance\": {\n" +
+        "    \"title\": \"Application Security Governance\",\n" +
+        "    \"components\": [\n" +
+        "      {\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":2,\"iRag\":\"green\",\"rag\":\"green\",\"initiative\":[{\"key\":\"AS-001\",\"summary\":\"Expand SAST coverage\",\"rag\":\"green\"}]},\n" +
+        "      {\"name\":\"RASP Agent\",\"maturity\":\"DEFINED\",\"status\":\"MEDIUM\",\"icon\":\"user\",\"initiatives\":1,\"iRag\":\"amber\",\"rag\":\"amber\",\"initiative\":[{\"key\":\"AS-002\",\"summary\":\"Pilot runtime agents\",\"rag\":\"amber\"}]}\n" +
+        "    ]\n" +
+        "  },\n" +
+        "  \"capabilities\": {\n" +
+        "    \"title\": \"Application Security Capabilities\",\n" +
+        "    \"domains\": [\n" +
+        "      {\n" +
+        "        \"domain\": \"Application Security Testing\",\n" +
+        "        \"components\": [\n" +
+        "          {\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":3,\"iRag\":\"green\",\"rag\":\"green\",\"initiative\":[{\"key\":\"AS-003\",\"summary\":\"Automate onboarding\",\"rag\":\"green\"}]},\n" +
+        "          {\"name\":\"RASP Agent\",\"maturity\":\"DEFINED\",\"status\":\"MEDIUM\",\"icon\":\"user\",\"initiatives\":1,\"iRag\":\"amber\",\"rag\":\"amber\",\"initiative\":[{\"key\":\"AS-004\",\"summary\":\"Expand telemetry\",\"rag\":\"amber\"}]}\n" +
+        "        ]\n" +
+        "      }\n" +
+        "    ]\n" +
+        "  }\n" +
+        "}";
+
     @Inject
     SvgService svgService;
 
@@ -47,9 +71,8 @@ public class DashboardResource {
                     schema = @Schema(implementation = ESA.class),
                     examples = {
                         @ExampleObject(name = "sample",
-                            description = "Sample hierarchical payload with valid Status and Maturity enum values",
-                            value = "{\n    \"title\": \"Application Security\",\n    \"icon\": \"shield\",\n    \"governance\": {\n        \"title\": \"Application Security Governance\",\n        \"components\": [\n            {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":3,\"doubleBorder\":true,\"rag\":\"green\"},\n            {\"capability\":\"RASP\",\"name\":\"RASP Agent\",\"maturity\":\"DEFINED\",\"status\":\"MEDIUM\",\"icon\":\"user\",\"initiatives\":0,\"doubleBorder\":false,\"rag\":\"amber\"}\n        ]\n    },\n    \"capabilities\": {\n      \"title\": \"Application Security Capabilities\",\n      \"icon\": \"chart\",\n      \"domains\": [\n        {\n                \"domain\":\"Application Security Testing\",\n                \"icon\": \"group\",\n                \"components\": [\n                    {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":5,\"doubleBorder\":true,\"rag\":\"green\"},\n                    {\"capability\":\"DAST\",\"name\":\"Dynamic Scanning\",\"maturity\":\"DEFINED\",\"status\":\"EFFECTIVE\",\"icon\":\"bug\",\"initiatives\":2,\"doubleBorder\":false,\"rag\":\"green\"}\n                ]\n            },\n            {\n                \"domain\":\"Runtime Protection\",\n                \"icon\": \"user\",\n                \"components\": [\n                    {\"capability\":\"RASP\",\"name\":\"RASP Agent\",\"maturity\":\"REPEATABLE\",\"status\":\"LOW\",\"icon\":\"user\",\"initiatives\":2,\"doubleBorder\":false,\"rag\":\"amber\"},\n                    {\"capability\":\"WAF\",\"name\":\"Web Application Firewall\",\"maturity\":\"INITIAL\",\"status\":\"MEDIUM\",\"icon\":\"firewall\",\"initiatives\":1,\"doubleBorder\":false,\"rag\":\"red\"}\n                ]\n            }\n        ]\n    } \n}"
-                        )
+                            description = "Sample hierarchical payload with nested initiatives",
+                            value = SAMPLE_PAYLOAD)
                     }
                 )
             ) JsonNode model) {
@@ -77,9 +100,8 @@ public class DashboardResource {
                     schema = @Schema(implementation = ESA.class),
                     examples = {
                         @ExampleObject(name = "sample",
-                            description = "Sample hierarchical payload with valid Status and Maturity enum values",
-                            value = "{\n    \"title\": \"Application Security\",\n    \"icon\": \"shield\",\n    \"governance\": {\n        \"title\": \"Application Security Governance\",\n        \"components\": [\n            {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":3,\"doubleBorder\":true,\"rag\":\"green\"},\n            {\"capability\":\"RASP\",\"name\":\"RASP Agent\",\"maturity\":\"DEFINED\",\"status\":\"MEDIUM\",\"icon\":\"user\",\"initiatives\":0,\"doubleBorder\":false,\"rag\":\"amber\"}\n        ]\n    },\n    \"capabilities\": {\n      \"title\": \"Application Security Capabilities\",\n      \"icon\": \"chart\",\n      \"domains\": [\n        {\n                \"domain\":\"Application Security Testing\",\n                \"icon\": \"group\",\n                \"components\": [\n                    {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":5,\"doubleBorder\":true,\"rag\":\"green\"},\n                    {\"capability\":\"DAST\",\"name\":\"Dynamic Scanning\",\"maturity\":\"DEFINED\",\"status\":\"EFFECTIVE\",\"icon\":\"bug\",\"initiatives\":2,\"doubleBorder\":false,\"rag\":\"green\"}\n                ]\n            },\n            {\n                \"domain\":\"Runtime Protection\",\n                \"icon\": \"user\",\n                \"components\": [\n                    {\"capability\":\"RASP\",\"name\":\"RASP Agent\",\"maturity\":\"REPEATABLE\",\"status\":\"LOW\",\"icon\":\"user\",\"initiatives\":2,\"doubleBorder\":false,\"rag\":\"amber\"},\n                    {\"capability\":\"WAF\",\"name\":\"Web Application Firewall\",\"maturity\":\"INITIAL\",\"status\":\"MEDIUM\",\"icon\":\"firewall\",\"initiatives\":1,\"doubleBorder\":false,\"rag\":\"red\"}\n                ]\n            }\n        ]\n    } \n}"
-                        )
+                            description = "Sample hierarchical payload with nested initiatives",
+                            value = SAMPLE_PAYLOAD)
                     }
                 )
             ) JsonNode model) throws Exception {
@@ -108,9 +130,8 @@ public class DashboardResource {
                     schema = @Schema(implementation = ESA.class),
                     examples = {
                         @ExampleObject(name = "sample",
-                            description = "Sample hierarchical payload with valid Status and Maturity enum values",
-                            value = "{\n    \"title\": \"Application Security\",\n    \"icon\": \"shield\",\n    \"governance\": {\n        \"title\": \"Application Security Governance\",\n        \"components\": [\n            {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":3,\"doubleBorder\":true,\"rag\":\"green\"},\n            {\"capability\":\"RASP\",\"name\":\"RASP Agent\",\"maturity\":\"DEFINED\",\"status\":\"MEDIUM\",\"icon\":\"user\",\"initiatives\":0,\"doubleBorder\":false,\"rag\":\"amber\"}\n        ]\n    },\n    \"capabilities\": {\n      \"title\": \"Application Security Capabilities\",\n      \"icon\": \"chart\",\n      \"domains\": [\n        {\n                \"domain\":\"Application Security Testing\",\n                \"icon\": \"group\",\n                \"components\": [\n                    {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":5,\"doubleBorder\":true,\"rag\":\"green\"},\n                    {\"capability\":\"DAST\",\"name\":\"Dynamic Scanning\",\"maturity\":\"DEFINED\",\"status\":\"EFFECTIVE\",\"icon\":\"bug\",\"initiatives\":2,\"doubleBorder\":false,\"rag\":\"green\"}\n                ]\n            },\n            {\n                \"domain\":\"Runtime Protection\",\n                \"icon\": \"user\",\n                \"components\": [\n                    {\"capability\":\"RASP\",\"name\":\"RASP Agent\",\"maturity\":\"REPEATABLE\",\"status\":\"LOW\",\"icon\":\"user\",\"initiatives\":2,\"doubleBorder\":false,\"rag\":\"amber\"},\n                    {\"capability\":\"WAF\",\"name\":\"Web Application Firewall\",\"maturity\":\"INITIAL\",\"status\":\"MEDIUM\",\"icon\":\"firewall\",\"initiatives\":1,\"doubleBorder\":false,\"rag\":\"red\"}\n                ]\n            }\n        ]\n    } \n}"
-                        )
+                            description = "Sample hierarchical payload with nested initiatives",
+                            value = SAMPLE_PAYLOAD)
                     }
                 )
             ) JsonNode model) throws Exception {
@@ -168,8 +189,7 @@ public class DashboardResource {
                     examples = {
                         @ExampleObject(name = "sample",
                             description = "Payload containing initiative arrays under each component",
-                            value = "{\n    \"title\": \"Application Security\",\n    \"icon\": \"shield\",\n    \"governance\": {\n        \"title\": \"Application Security Governance\",\n        \"components\": [\n            {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":3,\"doubleBorder\":true,\"rag\":\"green\",\"initiative\":[{\"key\":\"AS-001\",\"summary\":\"Expand SAST rules coverage\",\"businessBenefit\":\"Catch issues earlier\",\"dueDate\":\"2024-12-15\",\"rag\":\"green\"}]}\n        ]\n    },\n    \"capabilities\": {\n      \"title\": \"Application Security Capabilities\",\n      \"icon\": \"chart\",\n      \"domains\": [\n        {\n                \"domain\":\"Application Security Testing\",\n                \"icon\": \"group\",\n                \"components\": [\n                    {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":5,\"doubleBorder\":true,\"rag\":\"green\",\"initiative\":[{\"key\":\"AS-003\",\"summary\":\"Automate onboarding\",\"businessBenefit\":\"Increase coverage\",\"dueDate\":\"2025-01-20\",\"rag\":\"green\"}]}\n                ]\n            }\n        ]\n    } \n}"
-                        )
+                            value = SAMPLE_PAYLOAD)
                     }
                 )
             ) JsonNode model) {

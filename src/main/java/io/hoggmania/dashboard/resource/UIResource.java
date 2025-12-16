@@ -61,49 +61,7 @@ public class UIResource {
     @Path("/sample")
     @Produces(MediaType.APPLICATION_JSON)
     public Response sample() {
-        String sample = "{\n" +
-                "  \"title\": \"Application Security\",\n" +
-                "  \"icon\": \"shield\",\n" +
-                "  \"governance\": {\n" +
-                "    \"title\": \"Application Security Governance\",\n" +
-                "    \"components\": [\n" +
-                "      {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":3,\"doubleBorder\":true,\"rag\":\"green\"},\n" +
-                "      {\"capability\":\"RASP\",\"name\":\"RASP Agent\",\"maturity\":\"DEFINED\",\"status\":\"MEDIUM\",\"icon\":\"user\",\"initiatives\":0,\"doubleBorder\":false,\"rag\":\"amber\"}\n" +
-                "    ]\n" +
-                "  },\n" +
-                "  \"capabilities\": {\n" +
-                "    \"title\": \"Application Security Capabilities\",\n" +
-                "    \"icon\": \"chart\",\n" +
-                "    \"domains\": [\n" +
-                "      {\n" +
-                "        \"domain\":\"Application Security Testing\",\n" +
-                "        \"icon\": \"group\",\n" +
-                "        \"components\": [\n" +
-                "          {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":5,\"doubleBorder\":true,\"rag\":\"green\"},\n" +
-                "          {\"capability\":\"RASP\",\"name\":\"RASP Agent\",\"maturity\":\"DEFINED\",\"status\":\"MEDIUM\",\"icon\":\"user\",\"initiatives\":0,\"doubleBorder\":false,\"rag\":\"amber\"}\n" +
-                "        ]\n" +
-                "      },\n" +
-                "      {\n" +
-                "        \"domain\":\"RASP Security Testing\",\n" +
-                "        \"icon\": \"user\",\n" +
-                "        \"components\": [\n" +
-                "          {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"REPEATABLE\",\"status\":\"LOW\",\"icon\":\"search\",\"initiatives\":2,\"doubleBorder\":false,\"rag\":\"amber\"},\n" +
-                "          {\"capability\":\"RASP\",\"name\":\"RASP Agent\",\"maturity\":\"INITIAL\",\"status\":\"MEDIUM\",\"icon\":\"user\",\"initiatives\":1,\"doubleBorder\":false,\"rag\":\"red\"}\n" +
-                "        ]\n" +
-                "      },\n" +
-                "      { \"domain\":\"SPACE\", \"components\": [] },\n" +
-                "      {\n" +
-                "        \"domain\":\"DAST Security Testing\",\n" +
-                "        \"icon\": \"bug\",\n" +
-                "        \"components\": [\n" +
-                "          {\"capability\":\"SAST\",\"name\":\"Static Code Scanning\",\"maturity\":\"OPTIMISED\",\"status\":\"EFFECTIVE\",\"icon\":\"search\",\"initiatives\":4,\"doubleBorder\":false,\"rag\":\"green\"},\n" +
-                "          {\"capability\":\"RASP\",\"name\":\"RASP Agent\",\"maturity\":\"DEFINED\",\"status\":\"MEDIUM\",\"icon\":\"user\",\"initiatives\":0,\"doubleBorder\":false,\"rag\":\"amber\"}\n" +
-                "        ]\n" +
-                "      }\n" +
-                "    ]\n" +
-                "  }\n" +
-                "}\n";
-        return Response.ok(sample).build();
+        return Response.ok(DashboardResource.SAMPLE_PAYLOAD).build();
     }
 
     @POST
@@ -158,7 +116,12 @@ public class UIResource {
     @Path("/jira")
     @Produces(MediaType.TEXT_HTML)
     public Response jiraForm() {
-        String html = jiraTemplate.data("message", null).data("payload", null).data("jiraUrl", "").render();
+        String html = jiraTemplate
+                .data("message", null)
+                .data("payload", null)
+                .data("jiraUrl", "")
+                .data("jiraBase", "")
+                .render();
         return Response.ok(html).type(MediaType.TEXT_HTML).build();
     }
 
@@ -166,15 +129,17 @@ public class UIResource {
     @Path("/jira/generate")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
-    public Response jiraGenerate(@FormParam("jiraUrl") String jiraUrl,
+    public Response jiraGenerate(@FormParam("jiraBase") String jiraBase,
+                                 @FormParam("jiraUrl") String jiraUrl,
                                  @FormParam("jiraToken") String jiraToken) {
         try {
-            ESA esa = jiraPayloadService.buildFromUrl(jiraUrl, jiraToken);
+            ESA esa = jiraPayloadService.buildFromUrl(jiraBase, jiraUrl, jiraToken);
             String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(esa);
             String html = jiraTemplate
                     .data("message", null)
                     .data("payload", json)
                     .data("jiraUrl", jiraUrl)
+                    .data("jiraBase", jiraBase)
                     .render();
             return Response.ok(html).type(MediaType.TEXT_HTML).build();
         } catch (Exception e) {
@@ -182,6 +147,7 @@ public class UIResource {
                     .data("message", e.getMessage())
                     .data("payload", null)
                     .data("jiraUrl", jiraUrl == null ? "" : jiraUrl)
+                    .data("jiraBase", jiraBase == null ? "" : jiraBase)
                     .render();
             return Response.status(Response.Status.BAD_REQUEST).entity(html).type(MediaType.TEXT_HTML).build();
         }

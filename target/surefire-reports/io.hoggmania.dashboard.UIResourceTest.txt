@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: io.hoggmania.dashboard.UIResourceTest
--------------------------------------------------------------------------------
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.218 s -- in io.hoggmania.dashboard.UIResourceTest
