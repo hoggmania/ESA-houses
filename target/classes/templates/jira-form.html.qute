@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ESA Dashboard – Jira Import</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #222; max-width: 820px; }
+    h1 { margin-top: 0; }
+    textarea, input[type="text"] {
+      width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #bbb; font-size: 14px;
+    }
+    textarea { min-height: 260px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; line-height: 1.4; }
+    button { appearance: none; background: #0d6efd; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    button.secondary { background: #6c757d; }
+    .row { display: flex; gap: 12px; margin-top: 12px; }
+    .msg { padding: 12px 14px; border-radius: 6px; margin-bottom: 16px; }
+    .error { background: #fee; border: 1px solid #e99; color: #900; white-space: pre-wrap; }
+    .hint { font-size: 13px; color: #555; }
+    ul { margin: 8px 0 16px 18px; }
+    li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Generate ESA House from Jira</h1>
+  <p>Provide the Jira issue URL (or key) that represents the ESA root. The importer will walk linked issues according to the ESA governance rules.</p>
+  <div class="hint">
+    Expected hierarchy:
+    <ul>
+      <li>Root issue has labels <code>ESA</code> and <code>ESA-Root:&#123;name&#125;</code>.</li>
+      <li>Linked issue labelled <code>ESA-Governance</code> &rarr; Features become governance tiles.</li>
+      <li>Linked issue labelled <code>ESA-Capabilities</code> &rarr; Epics mapped to Domains, their Features mapped to Capability tiles.</li>
+      <li>Capability tiles derive Capability/Maturity/Status/RAG from labels such as <code>ESA-Capability:SAST</code>, <code>ESA-Maturity:MANAGED</code>, etc.</li>
+      <li>Linked Initiative/Feature/Epic issues become initiative entries.</li>
+    </ul>
+  </div>
+
+  {#if message}
+  <div class="msg error">{message}</div>
+  {/if}
+
+  <form method="post" action="/ui/jira/generate">
+    <label for="jiraUrl">Jira issue URL or key</label>
+    <input type="text" id="jiraUrl" name="jiraUrl" required value="{jiraUrl ?: ''}" placeholder="https://your-domain.atlassian.net/browse/ESA-123"/>
+    <label for="jiraToken">Personal Access Token</label>
+    <input type="password" id="jiraToken" name="jiraToken" placeholder="Paste your Jira PAT" autocomplete="off"/>
+    <div class="row">
+      <button type="submit">Fetch &amp; Generate JSON</button>
+      <a href="/ui"><button type="button" class="secondary">Back</button></a>
+    </div>
+  </form>
+
+  {#if payload}
+  <h2>Generated Payload</h2>
+  <p class="hint">You can paste this JSON into the ESA Dashboard renderer or click a button below.</p>
+  <form class="row" action="/ui/render-text" method="post">
+    <input type="hidden" name="payload" value="{payload}"/>
+    <button type="submit">Render ESA House</button>
+    <button type="button" class="secondary" onclick="copyPayload()">Copy JSON</button>
+  </form>
+  <textarea id="jiraPayload" readonly>{payload}</textarea>
+  {/if}
+
+  <script>
+    function copyPayload() {
+      const textarea = document.getElementById('jiraPayload');
+      textarea.select();
+      document.execCommand('copy');
+      alert('Payload copied to clipboard.');
+    }
+  </script>
+</body>
+</html>

@@ -5,6 +5,7 @@ D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\model\DomainGroup.
 D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\model\ComponentInitiative.java
 D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\MainApplication.java
 D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\resource\DashboardResource.java
+D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\service\JiraPayloadService.java
 D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\model\Capabilities.java
 D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\exception\GlobalExceptionMapper.java
 D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\model\Governance.java
@@ -13,6 +14,7 @@ D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\service\Initiative
 D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\model\InitiativeRow.java
 D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\model\RenderItem.java
 D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\model\DashboardModel.java
+D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\service\JiraClient.java
 D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\resource\UIResource.java
 D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\service\SvgService.java
 D:\dev\github\ESA-houses\src\main\java\io\hoggmania\dashboard\resource\RootResource.java

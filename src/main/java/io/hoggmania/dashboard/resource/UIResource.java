@@ -3,6 +3,8 @@ package io.hoggmania.dashboard.resource;
 import io.hoggmania.dashboard.model.ESA;
 import io.hoggmania.dashboard.service.SvgService;
 import io.hoggmania.dashboard.service.InitiativesPageService;
+import io.hoggmania.dashboard.service.JiraPayloadService;
+import io.hoggmania.dashboard.model.ESA;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
@@ -39,6 +41,13 @@ public class UIResource {
     @Inject
     @Location("ui-result.html.qute")
     Template resultTemplate;
+
+    @Inject
+    @Location("jira-form.html.qute")
+    Template jiraTemplate;
+
+    @Inject
+    JiraPayloadService jiraPayloadService;
 
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -141,6 +150,39 @@ public class UIResource {
             String error = e.getMessage();
             TemplateInstance ti = formTemplate.data("message", error).data("payload", payload == null ? "" : payload);
             String html = ti.render();
+            return Response.status(Response.Status.BAD_REQUEST).entity(html).type(MediaType.TEXT_HTML).build();
+        }
+    }
+
+    @GET
+    @Path("/jira")
+    @Produces(MediaType.TEXT_HTML)
+    public Response jiraForm() {
+        String html = jiraTemplate.data("message", null).data("payload", null).data("jiraUrl", "").render();
+        return Response.ok(html).type(MediaType.TEXT_HTML).build();
+    }
+
+    @POST
+    @Path("/jira/generate")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public Response jiraGenerate(@FormParam("jiraUrl") String jiraUrl,
+                                 @FormParam("jiraToken") String jiraToken) {
+        try {
+            ESA esa = jiraPayloadService.buildFromUrl(jiraUrl, jiraToken);
+            String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(esa);
+            String html = jiraTemplate
+                    .data("message", null)
+                    .data("payload", json)
+                    .data("jiraUrl", jiraUrl)
+                    .render();
+            return Response.ok(html).type(MediaType.TEXT_HTML).build();
+        } catch (Exception e) {
+            String html = jiraTemplate
+                    .data("message", e.getMessage())
+                    .data("payload", null)
+                    .data("jiraUrl", jiraUrl == null ? "" : jiraUrl)
+                    .render();
             return Response.status(Response.Status.BAD_REQUEST).entity(html).type(MediaType.TEXT_HTML).build();
         }
     }
