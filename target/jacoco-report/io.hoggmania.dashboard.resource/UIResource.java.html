@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UIResource.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">quarkus-dashboard-generator</a> &gt; <a href="index.source.html" class="el_package">io.hoggmania.dashboard.resource</a> &gt; <span class="el_source">UIResource.java</span></div><h1>UIResource.java</h1><pre class="source lang-java linenums">package io.hoggmania.dashboard.resource;
+
+import io.hoggmania.dashboard.model.ESA;
+import io.hoggmania.dashboard.service.SvgService;
+import io.hoggmania.dashboard.service.InitiativesPageService;
+import io.hoggmania.dashboard.service.JiraPayloadService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.qute.Location;
+import io.quarkus.qute.Template;
+import io.quarkus.qute.TemplateInstance;
+
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
+@Path(&quot;/ui&quot;)
+@RequestScoped
+<span class="fc" id="L25">public class UIResource {</span>
+
+    @Inject
+    SvgService svgService;
+
+    @Inject
+    InitiativesPageService initiativesPageService;
+
+    @Inject
+    ObjectMapper objectMapper;
+
+    @Inject
+    @Location(&quot;ui-form.html.qute&quot;)
+    Template formTemplate;
+
+    @Inject
+    @Location(&quot;ui-result.html.qute&quot;)
+    Template resultTemplate;
+
+    @Inject
+    @Location(&quot;jira-form.html.qute&quot;)
+    Template jiraTemplate;
+
+    @Inject
+    JiraPayloadService jiraPayloadService;
+
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    public Response form() {
+<span class="fc" id="L54">        TemplateInstance ti = formTemplate.data(&quot;message&quot;, null).data(&quot;payload&quot;, &quot;&quot;);</span>
+<span class="fc" id="L55">        String html = ti.render();</span>
+<span class="fc" id="L56">        return Response.ok(html).type(MediaType.TEXT_HTML).build();</span>
+    }
+
+    @GET
+    @Path(&quot;/sample&quot;)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response sample() {
+<span class="fc" id="L63">        return Response.ok(DashboardResource.SAMPLE_PAYLOAD).build();</span>
+    }
+
+    @POST
+    @Path(&quot;/render&quot;)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public Response render(@FormParam(&quot;payload&quot;) String payload) {
+        try {
+<span class="nc" id="L72">            ESA esa = objectMapper.readValue(payload, ESA.class);</span>
+<span class="nc" id="L73">            String svg = svgService.renderSvg(esa);</span>
+<span class="nc" id="L74">            String initiatives = initiativesPageService.renderInitiativesFragment(esa);</span>
+<span class="nc" id="L75">            TemplateInstance ti = resultTemplate</span>
+<span class="nc" id="L76">                .data(&quot;svg&quot;, svg)</span>
+<span class="nc" id="L77">                .data(&quot;initiatives&quot;, initiatives)</span>
+<span class="nc" id="L78">                .data(&quot;payload&quot;, payload)</span>
+<span class="nc" id="L79">                .data(&quot;error&quot;, null);</span>
+<span class="nc" id="L80">            String html = ti.render();</span>
+<span class="nc" id="L81">            return Response.ok(html).type(MediaType.TEXT_HTML).build();</span>
+<span class="nc" id="L82">        } catch (Exception e) {</span>
+<span class="nc" id="L83">            String error = e.getMessage();</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">            TemplateInstance ti = formTemplate.data(&quot;message&quot;, error).data(&quot;payload&quot;, payload == null ? &quot;&quot; : payload);</span>
+<span class="nc" id="L85">            String html = ti.render();</span>
+<span class="nc" id="L86">            return Response.status(Response.Status.BAD_REQUEST).entity(html).type(MediaType.TEXT_HTML).build();</span>
+        }
+    }
+
+    @POST
+    @Path(&quot;/render-text&quot;)
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_HTML)
+    public Response renderText(String payload) {
+        try {
+<span class="nc" id="L96">            ESA esa = objectMapper.readValue(payload, ESA.class);</span>
+<span class="nc" id="L97">            String svg = svgService.renderSvg(esa);</span>
+<span class="nc" id="L98">            String initiatives = initiativesPageService.renderInitiativesFragment(esa);</span>
+<span class="nc" id="L99">            TemplateInstance ti = resultTemplate</span>
+<span class="nc" id="L100">                .data(&quot;svg&quot;, svg)</span>
+<span class="nc" id="L101">                .data(&quot;initiatives&quot;, initiatives)</span>
+<span class="nc" id="L102">                .data(&quot;payload&quot;, payload)</span>
+<span class="nc" id="L103">                .data(&quot;error&quot;, null);</span>
+<span class="nc" id="L104">            String html = ti.render();</span>
+<span class="nc" id="L105">            return Response.ok(html).type(MediaType.TEXT_HTML).build();</span>
+<span class="nc" id="L106">        } catch (Exception e) {</span>
+<span class="nc" id="L107">            String error = e.getMessage();</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            TemplateInstance ti = formTemplate.data(&quot;message&quot;, error).data(&quot;payload&quot;, payload == null ? &quot;&quot; : payload);</span>
+<span class="nc" id="L109">            String html = ti.render();</span>
+<span class="nc" id="L110">            return Response.status(Response.Status.BAD_REQUEST).entity(html).type(MediaType.TEXT_HTML).build();</span>
+        }
+    }
+
+    @GET
+    @Path(&quot;/jira&quot;)
+    @Produces(MediaType.TEXT_HTML)
+    public Response jiraForm() {
+<span class="nc" id="L118">        String html = jiraTemplate</span>
+<span class="nc" id="L119">                .data(&quot;message&quot;, null)</span>
+<span class="nc" id="L120">                .data(&quot;payload&quot;, null)</span>
+<span class="nc" id="L121">                .data(&quot;jiraUrl&quot;, &quot;&quot;)</span>
+<span class="nc" id="L122">                .data(&quot;jiraBase&quot;, &quot;&quot;)</span>
+<span class="nc" id="L123">                .render();</span>
+<span class="nc" id="L124">        return Response.ok(html).type(MediaType.TEXT_HTML).build();</span>
+    }
+
+    @POST
+    @Path(&quot;/jira/generate&quot;)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public Response jiraGenerate(@FormParam(&quot;jiraBase&quot;) String jiraBase,
+                                 @FormParam(&quot;jiraUrl&quot;) String jiraUrl,
+                                 @FormParam(&quot;jiraToken&quot;) String jiraToken) {
+        try {
+<span class="nc" id="L135">            ESA esa = jiraPayloadService.buildFromUrl(jiraBase, jiraUrl, jiraToken);</span>
+<span class="nc" id="L136">            String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(esa);</span>
+<span class="nc" id="L137">            String html = jiraTemplate</span>
+<span class="nc" id="L138">                    .data(&quot;message&quot;, null)</span>
+<span class="nc" id="L139">                    .data(&quot;payload&quot;, json)</span>
+<span class="nc" id="L140">                    .data(&quot;jiraUrl&quot;, jiraUrl)</span>
+<span class="nc" id="L141">                    .data(&quot;jiraBase&quot;, jiraBase)</span>
+<span class="nc" id="L142">                    .render();</span>
+<span class="nc" id="L143">            return Response.ok(html).type(MediaType.TEXT_HTML).build();</span>
+<span class="nc" id="L144">        } catch (Exception e) {</span>
+<span class="nc" id="L145">            String html = jiraTemplate</span>
+<span class="nc" id="L146">                    .data(&quot;message&quot;, e.getMessage())</span>
+<span class="nc" id="L147">                    .data(&quot;payload&quot;, null)</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">                    .data(&quot;jiraUrl&quot;, jiraUrl == null ? &quot;&quot; : jiraUrl)</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">                    .data(&quot;jiraBase&quot;, jiraBase == null ? &quot;&quot; : jiraBase)</span>
+<span class="nc" id="L150">                    .render();</span>
+<span class="nc" id="L151">            return Response.status(Response.Status.BAD_REQUEST).entity(html).type(MediaType.TEXT_HTML).build();</span>
+        }
+    }
+
+    @POST
+    @Path(&quot;/render-initiatives&quot;)
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_HTML)
+    public Response renderInitiatives(String payload) {
+        try {
+<span class="nc" id="L161">            ESA esa = objectMapper.readValue(payload, ESA.class);</span>
+<span class="nc" id="L162">            String html = initiativesPageService.renderInitiativesPage(esa, payload);</span>
+<span class="nc" id="L163">            return Response.ok(html).type(MediaType.TEXT_HTML).build();</span>
+<span class="nc" id="L164">        } catch (Exception e) {</span>
+<span class="nc" id="L165">            String error = e.getMessage();</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">            TemplateInstance ti = formTemplate.data(&quot;message&quot;, error).data(&quot;payload&quot;, payload == null ? &quot;&quot; : payload);</span>
+<span class="nc" id="L167">            String html = ti.render();</span>
+<span class="nc" id="L168">            return Response.status(Response.Status.BAD_REQUEST).entity(html).type(MediaType.TEXT_HTML).build();</span>
+        }
+    }
+
+    @POST
+    @Path(&quot;/svg&quot;)
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(&quot;image/svg+xml&quot;)
+    public Response downloadSvg(String payload) {
+        try {
+<span class="nc" id="L178">            ESA esa = objectMapper.readValue(payload, ESA.class);</span>
+<span class="nc" id="L179">            String svg = svgService.renderSvg(esa);</span>
+<span class="nc" id="L180">            return Response.ok(svg)</span>
+<span class="nc" id="L181">                    .header(&quot;Content-Disposition&quot;, &quot;attachment; filename=dashboard.svg&quot;)</span>
+<span class="nc" id="L182">                    .build();</span>
+<span class="nc" id="L183">        } catch (Exception e) {</span>
+<span class="nc" id="L184">            return Response.status(Response.Status.BAD_REQUEST)</span>
+<span class="nc" id="L185">                    .entity((&quot;Failed to render SVG: &quot; + e.getMessage()).getBytes())</span>
+<span class="nc" id="L186">                    .type(MediaType.TEXT_PLAIN)</span>
+<span class="nc" id="L187">                    .build();</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

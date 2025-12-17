@@ -1,6 +1,5 @@
 package io.hoggmania.dashboard.service;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,11 +20,35 @@ import io.hoggmania.dashboard.model.ComponentItem;
 import io.hoggmania.dashboard.model.Domain;
 import io.hoggmania.dashboard.model.ESA;
 import io.hoggmania.dashboard.model.Governance;
+import io.hoggmania.dashboard.util.StringUtils;
+import io.hoggmania.dashboard.util.UrlUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 /**
  * Builds ESA payloads from Jira issues based on the hierarchy rules outlined by ESA.
+ * 
+ * <p>The service expects a specific Jira issue structure with labels:
+ * <ul>
+ *   <li>Root issue: labeled with "ESA" and "ESA-Root:{name}"</li>
+ *   <li>Governance issue: linked to root, labeled with "ESA-Governance"</li>
+ *   <li>Capabilities issue: linked to root, labeled with "ESA-Capabilities"</li>
+ *   <li>Domain issues: linked to capabilities, issue type "Epic"</li>
+ *   <li>Feature issues: linked to domains or governance, issue type "Feature"</li>
+ *   <li>Initiative issues: linked to features, issue types "Theme", "Initiative", "Epic", or "Feature"</li>
+ * </ul>
+ * 
+ * <p>Components are configured using labels on Feature issues:
+ * <ul>
+ *   <li>ESA-Capability:{value}</li>
+ *   <li>ESA-Maturity:{value}</li>
+ *   <li>ESA-Status:{value}</li>
+ *   <li>ESA-RAG:{value}</li>
+ *   <li>ESA-Tool:{value}</li>
+ *   <li>ESA-Risk:{value}</li>
+ *   <li>ESA-Double (for double border)</li>
+ *   <li>ESA-Icon:{icon-name}</li>
+ * </ul>
  */
 @ApplicationScoped
 public class JiraPayloadService {
@@ -43,14 +66,24 @@ public class JiraPayloadService {
     @Inject
     JiraClient jiraClient;
 
+    /**
+     * Builds an ESA model from a Jira root issue URL.
+     * Recursively fetches linked issues to build the complete hierarchy.
+     * 
+     * @param baseUrl the Jira instance base URL (e.g., https://jira.example.com)
+     * @param issueUrl the root issue URL or key (e.g., PROJ-123 or https://jira.example.com/browse/PROJ-123)
+     * @param personalToken the personal access token for authentication
+     * @return the complete ESA model
+     * @throws ValidationException if the issue structure is invalid or required labels are missing
+     */
     public ESA buildFromUrl(String baseUrl, String issueUrl, String personalToken) {
-        if (baseUrl == null || baseUrl.isBlank()) {
+        if (StringUtils.isBlank(baseUrl)) {
             throw new ValidationException("Jira location is required.");
         }
-        if (issueUrl == null || issueUrl.isBlank()) {
+        if (StringUtils.isBlank(issueUrl)) {
             throw new ValidationException("Jira issue URL is required.");
         }
-        String key = extractIssueKey(issueUrl);
+        String key = UrlUtils.extractIssueKey(issueUrl);
         JsonNode root = jiraClient.fetchIssue(baseUrl, key, personalToken);
         validateRoot(root, key);
 
@@ -129,7 +162,7 @@ public class JiraPayloadService {
         for (JsonNode issue : initiativeIssues) {
             ComponentInitiative initiative = new ComponentInitiative();
             initiative.key = issue.path("key").asText();
-            initiative.link = buildBrowseUrl(baseUrl, initiative.key);
+            initiative.link = UrlUtils.buildBrowseUrl(baseUrl, initiative.key);
             initiative.summary = issue.path("fields").path("summary").asText();
             initiative.rag = extractLabel(issue, RAG_PATTERN).orElse("green");
             initiative.toolId = extractLabel(issue, TOOL_PATTERN).orElse("In-Demand");
@@ -265,24 +298,5 @@ public class JiraPayloadService {
 
     private boolean hasLabel(JsonNode issue, String label) {
         return collectLabels(issue).stream().anyMatch(l -> l.equalsIgnoreCase(label));
-    }
-
-    private String extractIssueKey(String urlOrKey) {
-        try {
-            URI uri = URI.create(urlOrKey);
-            String path = uri.getPath();
-            if (path == null || path.isBlank()) {
-                return urlOrKey;
-            }
-            String[] segments = path.split("/");
-            return segments[segments.length - 1];
-        } catch (IllegalArgumentException ex) {
-            return urlOrKey;
-        }
-    }
-
-    private String buildBrowseUrl(String baseUrl, String issueKey) {
-        String normalized = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
-        return normalized + "/browse/" + issueKey;
     }
 }

@@ -6,6 +6,10 @@ import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.logging.Log;
 import io.quarkus.qute.Location;
+import io.hoggmania.dashboard.config.DashboardLayoutConfig;
+import io.hoggmania.dashboard.util.ColorPalette;
+import io.hoggmania.dashboard.util.StringUtils;
+import io.hoggmania.dashboard.util.UrlUtils;
 import io.hoggmania.dashboard.model.RenderItem;
 import io.hoggmania.dashboard.model.DomainGroup;
 import io.hoggmania.dashboard.model.ESA;
@@ -26,51 +30,52 @@ import java.nio.charset.StandardCharsets;
 @ApplicationScoped
 public class SvgService {
 
-    private static final float DEFAULT_CANVAS_WIDTH = 1400f;
-    private static final float A4_WIDTH_MM = 297f;
-    private static final int LEGEND_HEIGHT = 90;
-    private static final int BOTTOM_MARGIN = 20;
-
     @Inject
     @Location("dashboard.svg.qute")
     Template dashboard; // Explicitly locate templates/dashboard.svg.qute
 
-
-
+    /**
+     * Renders an SVG dashboard from an ESA model.
+     * The dashboard includes governance components, capability domains, and a legend.
+     * Layout is automatically calculated based on the number of components and domains.
+     * 
+     * @param root the ESA model containing dashboard data
+     * @return the rendered SVG as a string
+     * @throws ValidationException if the ESA model is invalid
+     */
     public String renderSvg(ESA root) {
         // Validate input first
         ESA.validateESA(root);
         Log.info(root.toString());
-        // Layout constants
-        final int maxDomainColumnsPerRow = 7;
-        final float gapX = 16f;
-        final float gapY = 12f;
-        final float canvasWidth = DEFAULT_CANVAS_WIDTH;
-        final float leftMargin = 10f;
+        // Layout constants from config
+        final int maxDomainColumnsPerRow = DashboardLayoutConfig.MAX_DOMAIN_COLUMNS_PER_ROW;
+        final float gapX = DashboardLayoutConfig.GAP_X;
+        final float gapY = DashboardLayoutConfig.GAP_Y;
+        final float canvasWidth = DashboardLayoutConfig.DEFAULT_CANVAS_WIDTH;
+        final float leftMargin = DashboardLayoutConfig.LEFT_MARGIN;
         final float rightLimit = canvasWidth - leftMargin;
-        final float domainStartX = 20f;
-        final float availableWidth = Math.max(200f, rightLimit - domainStartX);
-        final float boxW = (availableWidth - gapX * (maxDomainColumnsPerRow - 1)) / maxDomainColumnsPerRow;
-        final float boxH = 45f;
-        final float headerOffset = 35f; // distance between header bar and first component row
-        final float headerHeight = 22f;
-        final float rowGapY = 60f; // additional spacing between wrapped rows
-        final float spaceW = boxW / 3f; // SPACE column width: 1/3 of normal
-        final float governanceHeaderY = 50f;
-        final float governanceHeaderHeight = 25f;
-        final float governanceHeaderToRowGap = 5f;
-        final float governanceRowGap = gapY;
-        final float governanceToCapabilitiesGap = 30f;
-        final float capabilitiesHeaderToDomainsGap = 75f;
-        final int nameCharsPerLine = 24;
-        final int capabilityCharsPerLine = 22;
-        final int maxNameLines = 2;
-        final int maxCapabilityLines = 1;
-        final int maxRowsPerColumn = 8;
-        final float domainSectionGap = headerOffset + headerHeight; // leave enough room for next domain header
-        final float textLeftX = 12f;
+        final float domainStartX = DashboardLayoutConfig.DOMAIN_START_X;
+        final float boxW = DashboardLayoutConfig.calculateBoxWidth(canvasWidth, leftMargin, domainStartX, maxDomainColumnsPerRow);
+        final float boxH = DashboardLayoutConfig.BOX_HEIGHT;
+        final float headerOffset = DashboardLayoutConfig.HEADER_OFFSET;
+        final float headerHeight = DashboardLayoutConfig.HEADER_HEIGHT;
+        final float rowGapY = DashboardLayoutConfig.ROW_GAP_Y;
+        final float spaceW = DashboardLayoutConfig.calculateSpaceWidth(boxW);
+        final float governanceHeaderY = DashboardLayoutConfig.GOVERNANCE_HEADER_Y;
+        final float governanceHeaderHeight = DashboardLayoutConfig.GOVERNANCE_HEADER_HEIGHT;
+        final float governanceHeaderToRowGap = DashboardLayoutConfig.GOVERNANCE_HEADER_TO_ROW_GAP;
+        final float governanceRowGap = DashboardLayoutConfig.GOVERNANCE_ROW_GAP;
+        final float governanceToCapabilitiesGap = DashboardLayoutConfig.GOVERNANCE_TO_CAPABILITIES_GAP;
+        final float capabilitiesHeaderToDomainsGap = DashboardLayoutConfig.CAPABILITIES_HEADER_TO_DOMAINS_GAP;
+        final int nameCharsPerLine = DashboardLayoutConfig.NAME_CHARS_PER_LINE;
+        final int capabilityCharsPerLine = DashboardLayoutConfig.CAPABILITY_CHARS_PER_LINE;
+        final int maxNameLines = DashboardLayoutConfig.MAX_NAME_LINES;
+        final int maxCapabilityLines = DashboardLayoutConfig.MAX_CAPABILITY_LINES;
+        final int maxRowsPerColumn = DashboardLayoutConfig.MAX_ROWS_PER_COLUMN;
+        final float domainSectionGap = DashboardLayoutConfig.DOMAIN_SECTION_GAP;
+        final float textLeftX = DashboardLayoutConfig.TEXT_LEFT_X;
         final float textCenterX = boxW / 2f;
-        final float iconPosX = boxW - 20f;
+        final float iconPosX = boxW - DashboardLayoutConfig.ICON_POS_X_OFFSET;
 
         LinkText titleLink = parseLinkField(root != null ? root.title : null);
         String title = sanitizeNullable(titleLink.text);
@@ -276,15 +281,15 @@ public class SvgService {
                 columnsInRow++;
             }
 
-            float legendStartY = rowBottomY + 30f;
+            float legendStartY = rowBottomY + DashboardLayoutConfig.LEGEND_TOP_MARGIN;
             legendY = (int) legendStartY;
         } else {
-            legendY = (int) (domainStartY + 30f);
+            legendY = (int) (domainStartY + DashboardLayoutConfig.LEGEND_TOP_MARGIN);
         }
 
         // Compute legend position defaults to below first row when no domains exist
         if (legendY == 0) {
-            legendY = (int)(domainStartY + 30f);
+            legendY = (int)(domainStartY + DashboardLayoutConfig.LEGEND_TOP_MARGIN);
         }
 
         // Prepare legend data: Status on left, Maturity on right with precomputed x offsets
@@ -303,8 +308,8 @@ public class SvgService {
         maturityLegend.add(legendEntry(ComponentItem.Maturity.MANAGED.displayName, ComponentItem.Maturity.MANAGED.hex, 1280));
         maturityLegend.add(legendEntry(ComponentItem.Maturity.OPTIMISED.displayName, ComponentItem.Maturity.OPTIMISED.hex, 1420));
 
-        int svgHeight = legendY + LEGEND_HEIGHT + BOTTOM_MARGIN;
-        float mmPerPixel = A4_WIDTH_MM / canvasWidth;
+        int svgHeight = legendY + DashboardLayoutConfig.LEGEND_HEIGHT + DashboardLayoutConfig.BOTTOM_MARGIN;
+        float mmPerPixel = DashboardLayoutConfig.A4_WIDTH_MM / canvasWidth;
         float svgHeightMm = svgHeight * mmPerPixel;
 
         TemplateInstance data = dashboard
@@ -332,7 +337,7 @@ public class SvgService {
             .data("canvasWidth", (int) canvasWidth)
             .data("svgHeight", svgHeight)
             .data("svgHeightMm", svgHeightMm)
-            .data("a4WidthMm", A4_WIDTH_MM);
+            .data("a4WidthMm", DashboardLayoutConfig.A4_WIDTH_MM);
             // coordinates for initiatives badge inside a box (local to group)
             data = data
             .data("initiativeCircleX", (int)(boxW - 10))
@@ -349,6 +354,14 @@ public class SvgService {
         return rendered;
     }
 
+    /**
+     * Converts SVG content to PNG format using Apache Batik.
+     * 
+     * @param svgContent the SVG content as a string
+     * @param dpi the DPI (dots per inch) for the PNG output
+     * @return the PNG image as a byte array
+     * @throws Exception if the conversion fails
+     */
     public byte[] renderPngFromSvg(String svgContent, float dpi) throws Exception {
         // Convert SVG string to PNG bytes using Batik
         PNGTranscoder transcoder = new PNGTranscoder();
@@ -397,12 +410,7 @@ public class SvgService {
     }
 
     private String colorForInitiativeRag(char c) {
-        switch (c) {
-            case 'R': return "#DC2626"; // red
-            case 'A': return "#F97316"; // amber
-            case 'G': return "#22C55E"; // green
-            default: return "#FFFFFF";
-        }
+        return ColorPalette.getInitiativeRagColor(c);
     }
 
     private java.util.List<DomainColumnLayout> buildDomainColumns(java.util.List<Domain> domains, float boxWidth, float spaceWidth, int maxRowsPerColumn) {
@@ -524,37 +532,11 @@ public class SvgService {
     }
 
     private String sanitizeNullable(String value) {
-        return value == null ? null : escapeXml(value);
+        return value == null ? null : StringUtils.escapeXml(value);
     }
 
     private String escapeXml(String value) {
-        if (value == null || value.isEmpty()) {
-            return value == null ? "" : value;
-        }
-        StringBuilder sb = new StringBuilder(value.length());
-        for (int i = 0; i < value.length(); i++) {
-            char c = value.charAt(i);
-            switch (c) {
-                case '&':
-                    sb.append("&amp;");
-                    break;
-                case '<':
-                    sb.append("&lt;");
-                    break;
-                case '>':
-                    sb.append("&gt;");
-                    break;
-                case '\"':
-                    sb.append("&quot;");
-                    break;
-                case '\'':
-                    sb.append("&#39;");
-                    break;
-                default:
-                    sb.append(c);
-            }
-        }
-        return sb.toString();
+        return StringUtils.escapeXml(value);
     }
 
     private java.util.Map<String, Object> legendEntry(String label, String color, int x) {
@@ -586,11 +568,7 @@ public class SvgService {
     }
 
     private String decodeUrl(String value) {
-        try {
-            return java.net.URLDecoder.decode(value, java.nio.charset.StandardCharsets.UTF_8);
-        } catch (IllegalArgumentException ex) {
-            return value;
-        }
+        return UrlUtils.decode(value);
     }
 
     private static class LinkText {

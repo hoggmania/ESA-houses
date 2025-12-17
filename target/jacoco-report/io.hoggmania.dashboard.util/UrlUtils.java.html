@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UrlUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">quarkus-dashboard-generator</a> &gt; <a href="index.source.html" class="el_package">io.hoggmania.dashboard.util</a> &gt; <span class="el_source">UrlUtils.java</span></div><h1>UrlUtils.java</h1><pre class="source lang-java linenums">package io.hoggmania.dashboard.util;
+
+import io.hoggmania.dashboard.exception.ValidationException;
+
+import java.net.URI;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+/**
+ * Utility methods for URL manipulation and validation.
+ */
+public final class UrlUtils {
+    
+    private UrlUtils() {
+        // Prevent instantiation
+    }
+    
+    /**
+     * Normalizes a base URL by ensuring it has HTTPS scheme and no trailing slash.
+     * 
+     * @param baseUrl the URL to normalize
+     * @return the normalized URL
+     * @throws ValidationException if the URL is invalid or not HTTPS
+     */
+    public static String normalizeBaseUrl(String baseUrl) {
+<span class="nc bnc" id="L27" title="All 2 branches missed.">        if (StringUtils.isBlank(baseUrl)) {</span>
+<span class="nc" id="L28">            throw new ValidationException(&quot;Base URL cannot be null or blank.&quot;);</span>
+        }
+        
+<span class="nc" id="L31">        String trimmed = baseUrl.trim();</span>
+        URI uri;
+        try {
+<span class="nc" id="L34">            uri = URI.create(trimmed);</span>
+<span class="nc" id="L35">        } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L36">            throw new ValidationException(&quot;Invalid URL format: &quot; + e.getMessage());</span>
+<span class="nc" id="L37">        }</span>
+        
+<span class="nc" id="L39">        String scheme = uri.getScheme();</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        if (StringUtils.isBlank(scheme)) {</span>
+<span class="nc" id="L41">            throw new ValidationException(&quot;URL must include an https:// scheme.&quot;);</span>
+        }
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        if (!scheme.equalsIgnoreCase(&quot;https&quot;)) {</span>
+<span class="nc" id="L44">            throw new ValidationException(&quot;URL must use HTTPS.&quot;);</span>
+        }
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (!uri.isAbsolute()) {</span>
+<span class="nc" id="L47">            throw new ValidationException(&quot;URL must be absolute.&quot;);</span>
+        }
+        
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        return trimmed.endsWith(&quot;/&quot;) ? trimmed.substring(0, trimmed.length() - 1) : trimmed;</span>
+    }
+    
+    /**
+     * Extracts the issue key from a Jira URL or returns the key if already extracted.
+     * 
+     * @param urlOrKey the URL or issue key
+     * @return the extracted issue key
+     */
+    public static String extractIssueKey(String urlOrKey) {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        if (StringUtils.isBlank(urlOrKey)) {</span>
+<span class="nc" id="L61">            return urlOrKey;</span>
+        }
+        
+        try {
+<span class="nc" id="L65">            URI uri = URI.create(urlOrKey);</span>
+<span class="nc" id="L66">            String path = uri.getPath();</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">            if (StringUtils.isBlank(path)) {</span>
+<span class="nc" id="L68">                return urlOrKey;</span>
+            }
+<span class="nc" id="L70">            String[] segments = path.split(&quot;/&quot;);</span>
+<span class="nc" id="L71">            return segments[segments.length - 1];</span>
+<span class="nc" id="L72">        } catch (IllegalArgumentException ex) {</span>
+<span class="nc" id="L73">            return urlOrKey;</span>
+        }
+    }
+    
+    /**
+     * Builds a Jira browse URL for an issue.
+     * 
+     * @param baseUrl the Jira base URL
+     * @param issueKey the issue key
+     * @return the full browse URL
+     */
+    public static String buildBrowseUrl(String baseUrl, String issueKey) {
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        String normalized = baseUrl.endsWith(&quot;/&quot;) ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;</span>
+<span class="nc" id="L86">        String encodedKey = URLEncoder.encode(issueKey, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L87">        return normalized + &quot;/browse/&quot; + encodedKey;</span>
+    }
+    
+    /**
+     * URL-encodes a string using UTF-8.
+     * 
+     * @param value the string to encode
+     * @return the URL-encoded string
+     */
+    public static String encode(String value) {
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        if (value == null) {</span>
+<span class="nc" id="L98">            return null;</span>
+        }
+<span class="nc" id="L100">        return URLEncoder.encode(value, StandardCharsets.UTF_8);</span>
+    }
+    
+    /**
+     * URL-decodes a string using UTF-8.
+     * 
+     * @param value the string to decode
+     * @return the decoded string, or the original if decoding fails
+     */
+    public static String decode(String value) {
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (value == null) {</span>
+<span class="nc" id="L111">            return null;</span>
+        }
+        try {
+<span class="nc" id="L114">            return URLDecoder.decode(value, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L115">        } catch (IllegalArgumentException ex) {</span>
+<span class="nc" id="L116">            return value;</span>
+        }
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

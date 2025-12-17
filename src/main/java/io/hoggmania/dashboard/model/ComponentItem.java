@@ -41,13 +41,11 @@ public class ComponentItem {
         }
     }
 
-    // Enum fields with JSON aliases to accept 'status' or 'statusEnum'
+    // Enum fields
     @JsonProperty("status")
-    @JsonAlias({"status"})
     public Status status;
     
     @JsonProperty("maturity")
-    @JsonAlias({"maturity"})
     public Maturity maturity;
 
     public String rag; // e.g., "green"|"amber"|"red"

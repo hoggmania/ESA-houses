@@ -4,7 +4,6 @@ import io.hoggmania.dashboard.model.ESA;
 import io.hoggmania.dashboard.service.SvgService;
 import io.hoggmania.dashboard.service.InitiativesPageService;
 import io.hoggmania.dashboard.service.JiraPayloadService;
-import io.hoggmania.dashboard.model.ESA;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;

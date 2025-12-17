@@ -6,6 +6,9 @@ import io.hoggmania.dashboard.model.ESA;
 import io.hoggmania.dashboard.service.SvgService;
 import io.hoggmania.dashboard.service.InitiativesPageService;
 import io.hoggmania.dashboard.exception.ValidationException;
+import io.quarkus.logging.Log;
+import io.quarkus.qute.Location;
+import io.quarkus.qute.Template;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -57,6 +60,10 @@ public class DashboardResource {
 
     @Inject
     ObjectMapper mapper;
+
+    @Inject
+    @Location("preview.html.qute")
+    Template previewTemplate;
 
     @POST
     @Path("/svg")
@@ -146,31 +153,10 @@ public class DashboardResource {
         byte[] png = svgService.renderPngFromSvg(svg, 150f);
         String pngBase64 = Base64.getEncoder().encodeToString(png);
         
-        String html = "<!DOCTYPE html>\n" +
-            "<html>\n" +
-            "<head>\n" +
-            "  <meta charset='UTF-8'>\n" +
-            "  <title>Dashboard Preview</title>\n" +
-            "  <style>\n" +
-            "    body { font-family: sans-serif; margin: 20px; background: #f5f5f5; }\n" +
-            "    h1 { color: #333; }\n" +
-            "    .preview { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\n" +
-            "    .preview h2 { margin-top: 0; color: #1E3A8A; }\n" +
-            "    img { max-width: 100%; border: 1px solid #ddd; }\n" +
-            "  </style>\n" +
-            "</head>\n" +
-            "<body>\n" +
-            "  <h1>Dashboard Preview</h1>\n" +
-            "  <div class='preview'>\n" +
-            "    <h2>SVG Output</h2>\n" +
-            "    " + svg + "\n" +
-            "  </div>\n" +
-            "  <div class='preview'>\n" +
-            "    <h2>PNG Output (converted from SVG)</h2>\n" +
-            "    <img src='data:image/png;base64," + pngBase64 + "' alt='Dashboard PNG'/>\n" +
-            "  </div>\n" +
-            "</body>\n" +
-            "</html>";
+        String html = previewTemplate
+            .data("svg", svg)
+            .data("pngBase64", pngBase64)
+            .render();
         
         return Response.ok(html).build();
     }
@@ -200,7 +186,9 @@ public class DashboardResource {
         String payloadRaw = null;
         try {
             payloadRaw = mapper.writeValueAsString(model);
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.warn("Failed to serialize payload for display", e);
+        }
         String html = initiativesPageService.renderInitiativesPage(esa, payloadRaw);
         return Response.ok(html).build();
     }

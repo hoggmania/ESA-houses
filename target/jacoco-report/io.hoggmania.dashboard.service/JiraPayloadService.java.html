@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JiraPayloadService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">quarkus-dashboard-generator</a> &gt; <a href="index.source.html" class="el_package">io.hoggmania.dashboard.service</a> &gt; <span class="el_source">JiraPayloadService.java</span></div><h1>JiraPayloadService.java</h1><pre class="source lang-java linenums">package io.hoggmania.dashboard.service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import io.hoggmania.dashboard.exception.ValidationException;
+import io.hoggmania.dashboard.model.Capabilities;
+import io.hoggmania.dashboard.model.ComponentInitiative;
+import io.hoggmania.dashboard.model.ComponentItem;
+import io.hoggmania.dashboard.model.Domain;
+import io.hoggmania.dashboard.model.ESA;
+import io.hoggmania.dashboard.model.Governance;
+import io.hoggmania.dashboard.util.StringUtils;
+import io.hoggmania.dashboard.util.UrlUtils;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+/**
+ * Builds ESA payloads from Jira issues based on the hierarchy rules outlined by ESA.
+ * 
+ * &lt;p&gt;The service expects a specific Jira issue structure with labels:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Root issue: labeled with &quot;ESA&quot; and &quot;ESA-Root:{name}&quot;&lt;/li&gt;
+ *   &lt;li&gt;Governance issue: linked to root, labeled with &quot;ESA-Governance&quot;&lt;/li&gt;
+ *   &lt;li&gt;Capabilities issue: linked to root, labeled with &quot;ESA-Capabilities&quot;&lt;/li&gt;
+ *   &lt;li&gt;Domain issues: linked to capabilities, issue type &quot;Epic&quot;&lt;/li&gt;
+ *   &lt;li&gt;Feature issues: linked to domains or governance, issue type &quot;Feature&quot;&lt;/li&gt;
+ *   &lt;li&gt;Initiative issues: linked to features, issue types &quot;Theme&quot;, &quot;Initiative&quot;, &quot;Epic&quot;, or &quot;Feature&quot;&lt;/li&gt;
+ * &lt;/ul&gt;
+ * 
+ * &lt;p&gt;Components are configured using labels on Feature issues:
+ * &lt;ul&gt;
+ *   &lt;li&gt;ESA-Capability:{value}&lt;/li&gt;
+ *   &lt;li&gt;ESA-Maturity:{value}&lt;/li&gt;
+ *   &lt;li&gt;ESA-Status:{value}&lt;/li&gt;
+ *   &lt;li&gt;ESA-RAG:{value}&lt;/li&gt;
+ *   &lt;li&gt;ESA-Tool:{value}&lt;/li&gt;
+ *   &lt;li&gt;ESA-Risk:{value}&lt;/li&gt;
+ *   &lt;li&gt;ESA-Double (for double border)&lt;/li&gt;
+ *   &lt;li&gt;ESA-Icon:{icon-name}&lt;/li&gt;
+ * &lt;/ul&gt;
+ */
+@ApplicationScoped
+<span class="fc" id="L54">public class JiraPayloadService {</span>
+
+<span class="fc" id="L56">    private static final Pattern CAPABILITY_PATTERN = Pattern.compile(&quot;ESA-Capability:(.+)&quot;, Pattern.CASE_INSENSITIVE);</span>
+<span class="fc" id="L57">    private static final Pattern MATURITY_PATTERN = Pattern.compile(&quot;ESA-Maturity:(.+)&quot;, Pattern.CASE_INSENSITIVE);</span>
+<span class="fc" id="L58">    private static final Pattern STATUS_PATTERN = Pattern.compile(&quot;ESA-Status:(.+)&quot;, Pattern.CASE_INSENSITIVE);</span>
+<span class="fc" id="L59">    private static final Pattern RAG_PATTERN = Pattern.compile(&quot;ESA-RAG:(.+)&quot;, Pattern.CASE_INSENSITIVE);</span>
+<span class="fc" id="L60">    private static final Pattern TOOL_PATTERN = Pattern.compile(&quot;ESA-Tool:(.+)&quot;, Pattern.CASE_INSENSITIVE);</span>
+<span class="fc" id="L61">    private static final Pattern RISK_PATTERN = Pattern.compile(&quot;ESA-Risk:(.+)&quot;, Pattern.CASE_INSENSITIVE);</span>
+
+<span class="fc" id="L63">    private static final Set&lt;String&gt; INITIATIVE_ISSUE_TYPES = Set.of(</span>
+            &quot;Theme&quot;, &quot;Initiative&quot;, &quot;Epic&quot;, &quot;Feature&quot;);
+
+    @Inject
+    JiraClient jiraClient;
+
+    /**
+     * Builds an ESA model from a Jira root issue URL.
+     * Recursively fetches linked issues to build the complete hierarchy.
+     * 
+     * @param baseUrl the Jira instance base URL (e.g., https://jira.example.com)
+     * @param issueUrl the root issue URL or key (e.g., PROJ-123 or https://jira.example.com/browse/PROJ-123)
+     * @param personalToken the personal access token for authentication
+     * @return the complete ESA model
+     * @throws ValidationException if the issue structure is invalid or required labels are missing
+     */
+    public ESA buildFromUrl(String baseUrl, String issueUrl, String personalToken) {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (StringUtils.isBlank(baseUrl)) {</span>
+<span class="nc" id="L81">            throw new ValidationException(&quot;Jira location is required.&quot;);</span>
+        }
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        if (StringUtils.isBlank(issueUrl)) {</span>
+<span class="nc" id="L84">            throw new ValidationException(&quot;Jira issue URL is required.&quot;);</span>
+        }
+<span class="nc" id="L86">        String key = UrlUtils.extractIssueKey(issueUrl);</span>
+<span class="nc" id="L87">        JsonNode root = jiraClient.fetchIssue(baseUrl, key, personalToken);</span>
+<span class="nc" id="L88">        validateRoot(root, key);</span>
+
+<span class="nc" id="L90">        ESA esa = new ESA();</span>
+<span class="nc" id="L91">        esa.title = root.path(&quot;fields&quot;).path(&quot;summary&quot;).asText(&quot;ESA Dashboard&quot;);</span>
+<span class="nc" id="L92">        esa.icon = &quot;shield&quot;;</span>
+
+<span class="nc" id="L94">        Map&lt;String, JsonNode&gt; linkedIssues = loadLinkedIssues(root, baseUrl, personalToken);</span>
+<span class="nc" id="L95">        JsonNode governanceNode = findByLabel(linkedIssues, &quot;ESA-Governance&quot;);</span>
+<span class="nc" id="L96">        JsonNode capabilitiesNode = findByLabel(linkedIssues, &quot;ESA-Capabilities&quot;);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        if (governanceNode == null) {</span>
+<span class="nc" id="L98">            throw new ValidationException(&quot;Root issue &quot; + key + &quot; must have a linked issue labelled ESA-Governance&quot;);</span>
+        }
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (capabilitiesNode == null) {</span>
+<span class="nc" id="L101">            throw new ValidationException(&quot;Root issue &quot; + key + &quot; must have a linked issue labelled ESA-Capabilities&quot;);</span>
+        }
+
+<span class="nc" id="L104">        esa.governance = buildGovernance(governanceNode, baseUrl, personalToken);</span>
+<span class="nc" id="L105">        esa.capabilities = buildCapabilities(capabilitiesNode, baseUrl, personalToken);</span>
+<span class="nc" id="L106">        return esa;</span>
+    }
+
+    private Governance buildGovernance(JsonNode governanceIssue, String baseUrl, String token) {
+<span class="nc" id="L110">        Governance governance = new Governance();</span>
+<span class="nc" id="L111">        governance.title = governanceIssue.path(&quot;fields&quot;).path(&quot;summary&quot;).asText(&quot;Governance&quot;);</span>
+<span class="nc" id="L112">        governance.components = toComponentList(resolveLinkedFeatures(governanceIssue, baseUrl, token), baseUrl, token);</span>
+<span class="nc" id="L113">        return governance;</span>
+    }
+
+    private Capabilities buildCapabilities(JsonNode capabilitiesIssue, String baseUrl, String token) {
+<span class="nc" id="L117">        Capabilities capabilities = new Capabilities();</span>
+<span class="nc" id="L118">        capabilities.title = capabilitiesIssue.path(&quot;fields&quot;).path(&quot;summary&quot;).asText(&quot;Capabilities&quot;);</span>
+<span class="nc" id="L119">        capabilities.icon = &quot;chart&quot;;</span>
+<span class="nc" id="L120">        List&lt;JsonNode&gt; domains = resolveLinkedIssues(capabilitiesIssue, &quot;Epic&quot;, baseUrl, token);</span>
+<span class="nc" id="L121">        List&lt;Domain&gt; domainList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        for (JsonNode domainIssue : domains) {</span>
+<span class="nc" id="L123">            Domain domain = new Domain();</span>
+<span class="nc" id="L124">            domain.domain = domainIssue.path(&quot;fields&quot;).path(&quot;summary&quot;).asText(&quot;Domain&quot;);</span>
+<span class="nc" id="L125">            domain.icon = inferIconFromLabels(domainIssue);</span>
+<span class="nc" id="L126">            domain.components = toComponentList(resolveLinkedFeatures(domainIssue, baseUrl, token), baseUrl, token);</span>
+<span class="nc" id="L127">            domainList.add(domain);</span>
+<span class="nc" id="L128">        }</span>
+<span class="nc" id="L129">        capabilities.domains = domainList;</span>
+<span class="nc" id="L130">        return capabilities;</span>
+    }
+
+    private List&lt;ComponentItem&gt; toComponentList(List&lt;JsonNode&gt; featureIssues, String baseUrl, String token) {
+<span class="nc" id="L134">        List&lt;ComponentItem&gt; components = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        for (JsonNode issue : featureIssues) {</span>
+<span class="nc" id="L136">            components.add(toComponent(issue, baseUrl, token));</span>
+<span class="nc" id="L137">        }</span>
+<span class="nc" id="L138">        return components;</span>
+    }
+
+    private ComponentItem toComponent(JsonNode issue, String baseUrl, String token) {
+<span class="nc" id="L142">        ComponentItem component = new ComponentItem();</span>
+<span class="nc" id="L143">        component.name = issue.path(&quot;fields&quot;).path(&quot;summary&quot;).asText(&quot;Component&quot;);</span>
+<span class="nc" id="L144">        component.capability = extractLabel(issue, CAPABILITY_PATTERN).orElse(component.name);</span>
+<span class="nc" id="L145">        component.maturity = parseMaturity(extractLabel(issue, MATURITY_PATTERN).orElse(&quot;DEFINED&quot;));</span>
+<span class="nc" id="L146">        component.status = parseStatus(extractLabel(issue, STATUS_PATTERN).orElse(&quot;MEDIUM&quot;));</span>
+<span class="nc" id="L147">        component.icon = inferIconFromLabels(issue);</span>
+<span class="nc" id="L148">        component.rag = extractLabel(issue, RAG_PATTERN).orElse(&quot;green&quot;).toLowerCase(Locale.ENGLISH);</span>
+<span class="nc" id="L149">        component.iRag = component.rag;</span>
+<span class="nc" id="L150">        component.doubleBorder = hasLabel(issue, &quot;ESA-Double&quot;);</span>
+<span class="nc" id="L151">        List&lt;JsonNode&gt; initiativeIssues = resolveLinkedInitiatives(issue, baseUrl, token);</span>
+<span class="nc" id="L152">        component.initiativeDetails = buildInitiatives(initiativeIssues, baseUrl);</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">        component.initiatives = component.initiativeDetails != null ? component.initiativeDetails.size() : 0;</span>
+<span class="nc" id="L154">        return component;</span>
+    }
+
+    private List&lt;ComponentInitiative&gt; buildInitiatives(List&lt;JsonNode&gt; initiativeIssues, String baseUrl) {
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        if (initiativeIssues.isEmpty()) {</span>
+<span class="nc" id="L159">            return List.of();</span>
+        }
+<span class="nc" id="L161">        List&lt;ComponentInitiative&gt; initiatives = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">        for (JsonNode issue : initiativeIssues) {</span>
+<span class="nc" id="L163">            ComponentInitiative initiative = new ComponentInitiative();</span>
+<span class="nc" id="L164">            initiative.key = issue.path(&quot;key&quot;).asText();</span>
+<span class="nc" id="L165">            initiative.link = UrlUtils.buildBrowseUrl(baseUrl, initiative.key);</span>
+<span class="nc" id="L166">            initiative.summary = issue.path(&quot;fields&quot;).path(&quot;summary&quot;).asText();</span>
+<span class="nc" id="L167">            initiative.rag = extractLabel(issue, RAG_PATTERN).orElse(&quot;green&quot;);</span>
+<span class="nc" id="L168">            initiative.toolId = extractLabel(issue, TOOL_PATTERN).orElse(&quot;In-Demand&quot;);</span>
+<span class="nc" id="L169">            initiative.riskAppetite = extractLabel(issue, RISK_PATTERN).orElse(&quot;&quot;);</span>
+<span class="nc" id="L170">            initiative.businessBenefit = optionalText(issue.path(&quot;fields&quot;).path(&quot;description&quot;));</span>
+<span class="nc" id="L171">            initiative.dueDate = issue.path(&quot;fields&quot;).path(&quot;duedate&quot;).asText(&quot;&quot;);</span>
+<span class="nc" id="L172">            initiatives.add(initiative);</span>
+<span class="nc" id="L173">        }</span>
+<span class="nc" id="L174">        return initiatives;</span>
+    }
+
+    private String optionalText(JsonNode node) {
+<span class="nc bnc" id="L178" title="All 6 branches missed.">        if (node == null || node.isMissingNode() || node.isNull()) {</span>
+<span class="nc" id="L179">            return &quot;&quot;;</span>
+        }
+<span class="nc bnc" id="L181" title="All 2 branches missed.">        if (node.has(&quot;content&quot;)) {</span>
+            // Jira rich text
+<span class="nc" id="L183">            return node.path(&quot;content&quot;).toString();</span>
+        }
+<span class="nc" id="L185">        return node.asText(&quot;&quot;);</span>
+    }
+
+    private List&lt;JsonNode&gt; resolveLinkedFeatures(JsonNode parentIssue, String baseUrl, String token) {
+<span class="nc" id="L189">        return resolveLinkedIssues(parentIssue, &quot;Feature&quot;, baseUrl, token);</span>
+    }
+
+    private List&lt;JsonNode&gt; resolveLinkedIssues(JsonNode parentIssue, String expectedIssueType, String baseUrl, String token) {
+<span class="nc" id="L193">        List&lt;JsonNode&gt; linked = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        for (JsonNode link : parentIssue.path(&quot;fields&quot;).path(&quot;issuelinks&quot;)) {</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">            JsonNode raw = link.has(&quot;outwardIssue&quot;) ? link.path(&quot;outwardIssue&quot;) : link.path(&quot;inwardIssue&quot;);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">            if (raw.isMissingNode()) {</span>
+<span class="nc" id="L197">                continue;</span>
+            }
+<span class="nc" id="L199">            JsonNode issue = jiraClient.fetchIssue(baseUrl, raw.path(&quot;key&quot;).asText(), token);</span>
+<span class="nc" id="L200">            String typeName = issue.path(&quot;fields&quot;).path(&quot;issuetype&quot;).path(&quot;name&quot;).asText();</span>
+<span class="nc bnc" id="L201" title="All 4 branches missed.">            if (expectedIssueType == null || typeName.equalsIgnoreCase(expectedIssueType)) {</span>
+<span class="nc" id="L202">                linked.add(issue);</span>
+            }
+<span class="nc" id="L204">        }</span>
+<span class="nc" id="L205">        return linked;</span>
+    }
+
+    private List&lt;JsonNode&gt; resolveLinkedInitiatives(JsonNode issue, String baseUrl, String token) {
+<span class="nc" id="L209">        List&lt;JsonNode&gt; linked = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        for (JsonNode link : issue.path(&quot;fields&quot;).path(&quot;issuelinks&quot;)) {</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">            JsonNode raw = link.has(&quot;outwardIssue&quot;) ? link.path(&quot;outwardIssue&quot;) : link.path(&quot;inwardIssue&quot;);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">            if (raw.isMissingNode()) {</span>
+<span class="nc" id="L213">                continue;</span>
+            }
+<span class="nc" id="L215">            JsonNode child = jiraClient.fetchIssue(baseUrl, raw.path(&quot;key&quot;).asText(), token);</span>
+<span class="nc" id="L216">            String typeName = child.path(&quot;fields&quot;).path(&quot;issuetype&quot;).path(&quot;name&quot;).asText();</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">            if (INITIATIVE_ISSUE_TYPES.contains(typeName)) {</span>
+<span class="nc" id="L218">                linked.add(child);</span>
+            }
+<span class="nc" id="L220">        }</span>
+<span class="nc" id="L221">        return linked;</span>
+    }
+
+    private Map&lt;String, JsonNode&gt; loadLinkedIssues(JsonNode issue, String baseUrl, String token) {
+<span class="nc" id="L225">        Map&lt;String, JsonNode&gt; map = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">        for (JsonNode link : issue.path(&quot;fields&quot;).path(&quot;issuelinks&quot;)) {</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">            JsonNode raw = link.has(&quot;outwardIssue&quot;) ? link.path(&quot;outwardIssue&quot;) : link.path(&quot;inwardIssue&quot;);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">            if (raw.isMissingNode()) continue;</span>
+<span class="nc" id="L229">            JsonNode full = jiraClient.fetchIssue(baseUrl, raw.path(&quot;key&quot;).asText(), token);</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">            for (String label : collectLabels(full)) {</span>
+<span class="nc" id="L231">                map.put(label, full);</span>
+<span class="nc" id="L232">            }</span>
+<span class="nc" id="L233">        }</span>
+<span class="nc" id="L234">        return map;</span>
+    }
+
+    private JsonNode findByLabel(Map&lt;String, JsonNode&gt; issues, String label) {
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        for (Map.Entry&lt;String, JsonNode&gt; entry : issues.entrySet()) {</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">            if (entry.getKey().equalsIgnoreCase(label)) {</span>
+<span class="nc" id="L240">                return entry.getValue();</span>
+            }
+<span class="nc" id="L242">        }</span>
+<span class="nc" id="L243">        return null;</span>
+    }
+
+    private void validateRoot(JsonNode root, String key) {
+<span class="nc" id="L247">        Set&lt;String&gt; labels = collectLabels(root);</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">        if (!labels.contains(&quot;ESA&quot;)) {</span>
+<span class="nc" id="L249">            throw new ValidationException(&quot;Root issue &quot; + key + &quot; is missing required label 'ESA'&quot;);</span>
+        }
+<span class="nc" id="L251">        boolean hasRootLabel = labels.stream().anyMatch(l -&gt; l.toUpperCase(Locale.ENGLISH).startsWith(&quot;ESA-ROOT:&quot;));</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        if (!hasRootLabel) {</span>
+<span class="nc" id="L253">            throw new ValidationException(&quot;Root issue &quot; + key + &quot; is missing label 'ESA-Root:{name}'&quot;);</span>
+        }
+<span class="nc" id="L255">    }</span>
+
+    private Set&lt;String&gt; collectLabels(JsonNode issue) {
+<span class="nc" id="L258">        Set&lt;String&gt; labels = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">        for (JsonNode label : issue.path(&quot;fields&quot;).path(&quot;labels&quot;)) {</span>
+<span class="nc" id="L260">            labels.add(label.asText());</span>
+<span class="nc" id="L261">        }</span>
+<span class="nc" id="L262">        return labels;</span>
+    }
+
+    private ComponentItem.Status parseStatus(String value) {
+        try {
+<span class="nc" id="L267">            return ComponentItem.Status.valueOf(value.trim().toUpperCase(Locale.ENGLISH));</span>
+<span class="nc" id="L268">        } catch (Exception e) {</span>
+<span class="nc" id="L269">            return ComponentItem.Status.MEDIUM;</span>
+        }
+    }
+
+    private ComponentItem.Maturity parseMaturity(String value) {
+        try {
+<span class="nc" id="L275">            return ComponentItem.Maturity.valueOf(value.trim().toUpperCase(Locale.ENGLISH));</span>
+<span class="nc" id="L276">        } catch (Exception e) {</span>
+<span class="nc" id="L277">            return ComponentItem.Maturity.DEFINED;</span>
+        }
+    }
+
+    private String inferIconFromLabels(JsonNode issue) {
+<span class="nc" id="L282">        Set&lt;String&gt; labels = collectLabels(issue);</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">        if (labels.contains(&quot;ESA-Icon:bug&quot;)) return &quot;bug&quot;;</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">        if (labels.contains(&quot;ESA-Icon:user&quot;)) return &quot;user&quot;;</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">        if (labels.contains(&quot;ESA-Icon:group&quot;)) return &quot;group&quot;;</span>
+<span class="nc" id="L286">        return &quot;search&quot;;</span>
+    }
+
+    private Optional&lt;String&gt; extractLabel(JsonNode issue, Pattern pattern) {
+<span class="nc bnc" id="L290" title="All 2 branches missed.">        for (String label : collectLabels(issue)) {</span>
+<span class="nc" id="L291">            Matcher m = pattern.matcher(label);</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">            if (m.matches()) {</span>
+<span class="nc" id="L293">                return Optional.of(m.group(1).trim());</span>
+            }
+<span class="nc" id="L295">        }</span>
+<span class="nc" id="L296">        return Optional.empty();</span>
+    }
+
+    private boolean hasLabel(JsonNode issue, String label) {
+<span class="nc" id="L300">        return collectLabels(issue).stream().anyMatch(l -&gt; l.equalsIgnoreCase(label));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

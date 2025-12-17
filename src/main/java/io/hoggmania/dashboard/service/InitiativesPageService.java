@@ -15,12 +15,19 @@ import io.hoggmania.dashboard.model.Domain;
 import io.hoggmania.dashboard.model.ESA;
 import io.hoggmania.dashboard.model.Governance;
 import io.hoggmania.dashboard.model.InitiativeRow;
+import io.hoggmania.dashboard.util.ColorPalette;
+import io.hoggmania.dashboard.util.StringUtils;
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+/**
+ * Service for rendering HTML pages that list all initiatives from an ESA model.
+ * Extracts initiatives from all components across governance and capability domains,
+ * formats dates, and applies RAG coloring.
+ */
 @ApplicationScoped
 public class InitiativesPageService {
 
@@ -39,14 +46,34 @@ public class InitiativesPageService {
     @Location("initiatives.html.qute")
     Template initiativesTemplate;
 
+    /**
+     * Renders a standalone HTML page listing all initiatives.
+     * 
+     * @param root the ESA model
+     * @return the rendered HTML page
+     */
     public String renderInitiativesPage(ESA root) {
         return renderWithMode(root, true, null);
     }
 
+    /**
+     * Renders a standalone HTML page listing all initiatives with the raw JSON payload displayed.
+     * 
+     * @param root the ESA model
+     * @param payloadRaw the raw JSON payload as a string (optional, for display purposes)
+     * @return the rendered HTML page
+     */
     public String renderInitiativesPage(ESA root, String payloadRaw) {
         return renderWithMode(root, true, payloadRaw);
     }
 
+    /**
+     * Renders an HTML fragment (without full page structure) listing all initiatives.
+     * Suitable for embedding in other pages.
+     * 
+     * @param root the ESA model
+     * @return the rendered HTML fragment
+     */
     public String renderInitiativesFragment(ESA root) {
         return renderWithMode(root, false, null);
     }
@@ -135,20 +162,7 @@ public class InitiativesPageService {
     }
 
     private String ragColor(String rag) {
-        if (rag == null) {
-            return "#D1D5DB";
-        }
-        switch (rag.trim().toLowerCase(Locale.ENGLISH)) {
-            case "red":
-                return "#DC2626";
-            case "amber":
-            case "yellow":
-                return "#FBBF24";
-            case "green":
-                return "#16A34A";
-            default:
-                return "#D1D5DB";
-        }
+        return ColorPalette.getRagColor(rag);
     }
 
     private String formatDate(String raw) {
@@ -182,13 +196,10 @@ public class InitiativesPageService {
     }
 
     private String firstNonBlank(String value, String fallback) {
-        if (value != null && !value.isBlank()) {
-            return value.trim();
-        }
-        return fallback;
+        return StringUtils.firstNonBlank(value, fallback);
     }
 
     private String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
+        return StringUtils.blankToNull(value);
     }
 }

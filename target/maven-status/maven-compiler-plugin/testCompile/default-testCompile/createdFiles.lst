@@ -1,0 +1,8 @@
+io\hoggmania\dashboard\ValidationTest.class
+io\hoggmania\dashboard\DashboardResourceTest.class
+io\hoggmania\dashboard\util\StringUtilsTest.class
+io\hoggmania\dashboard\model\ESAValidationTest.class
+io\hoggmania\dashboard\util\UrlUtilsTest.class
+io\hoggmania\dashboard\util\RateLimiterTest.class
+io\hoggmania\dashboard\UIResourceTest.class
+io\hoggmania\dashboard\util\ColorPaletteTest.class

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StringUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">quarkus-dashboard-generator</a> &gt; <a href="index.source.html" class="el_package">io.hoggmania.dashboard.util</a> &gt; <span class="el_source">StringUtils.java</span></div><h1>StringUtils.java</h1><pre class="source lang-java linenums">package io.hoggmania.dashboard.util;
+
+/**
+ * Utility methods for string manipulation and validation.
+ */
+public final class StringUtils {
+    
+    private StringUtils() {
+        // Prevent instantiation
+    }
+    
+    /**
+     * Checks if a string is null, empty, or contains only whitespace.
+     * 
+     * @param value the string to check
+     * @return true if the string is blank, false otherwise
+     */
+    public static boolean isBlank(String value) {
+<span class="nc bnc" id="L19" title="All 4 branches missed.">        return value == null || value.isBlank();</span>
+    }
+    
+    /**
+     * Checks if a string is not null and contains non-whitespace characters.
+     * 
+     * @param value the string to check
+     * @return true if the string is not blank, false otherwise
+     */
+    public static boolean isNotBlank(String value) {
+<span class="nc bnc" id="L29" title="All 4 branches missed.">        return value != null &amp;&amp; !value.isBlank();</span>
+    }
+    
+    /**
+     * Returns the first non-blank string from the provided values.
+     * 
+     * @param values strings to check in order
+     * @return the first non-blank string, or empty string if all are blank
+     */
+    public static String firstNonBlank(String... values) {
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        for (String value : values) {</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">            if (isNotBlank(value)) {</span>
+<span class="nc" id="L41">                return value.trim();</span>
+            }
+        }
+<span class="nc" id="L44">        return &quot;&quot;;</span>
+    }
+    
+    /**
+     * Returns null if the string is blank, otherwise returns the trimmed string.
+     * 
+     * @param value the string to process
+     * @return null if blank, trimmed string otherwise
+     */
+    public static String blankToNull(String value) {
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        return isBlank(value) ? null : value.trim();</span>
+    }
+    
+    /**
+     * Escapes special XML/HTML characters to prevent XSS.
+     * 
+     * @param value the string to escape
+     * @return the escaped string, or empty string if input is null
+     */
+    public static String escapeXml(String value) {
+<span class="pc bpc" id="L64" title="2 of 4 branches missed.">        if (value == null || value.isEmpty()) {</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">            return value == null ? &quot;&quot; : value;</span>
+        }
+<span class="fc" id="L67">        StringBuilder sb = new StringBuilder(value.length());</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        for (int i = 0; i &lt; value.length(); i++) {</span>
+<span class="fc" id="L69">            char c = value.charAt(i);</span>
+<span class="pc bpc" id="L70" title="5 of 6 branches missed.">            switch (c) {</span>
+                case '&amp;':
+<span class="nc" id="L72">                    sb.append(&quot;&amp;amp;&quot;);</span>
+<span class="nc" id="L73">                    break;</span>
+                case '&lt;':
+<span class="nc" id="L75">                    sb.append(&quot;&amp;lt;&quot;);</span>
+<span class="nc" id="L76">                    break;</span>
+                case '&gt;':
+<span class="nc" id="L78">                    sb.append(&quot;&amp;gt;&quot;);</span>
+<span class="nc" id="L79">                    break;</span>
+                case '&quot;':
+<span class="nc" id="L81">                    sb.append(&quot;&amp;quot;&quot;);</span>
+<span class="nc" id="L82">                    break;</span>
+                case '\'':
+<span class="nc" id="L84">                    sb.append(&quot;&amp;#39;&quot;);</span>
+<span class="nc" id="L85">                    break;</span>
+                default:
+<span class="fc" id="L87">                    sb.append(c);</span>
+            }
+        }
+<span class="fc" id="L90">        return sb.toString();</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

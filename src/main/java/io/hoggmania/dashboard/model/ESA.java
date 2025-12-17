@@ -1,7 +1,6 @@
 package io.hoggmania.dashboard.model;
 
 import io.hoggmania.dashboard.exception.ValidationException;
-import com.fasterxml.jackson.annotation.JsonAlias;
 
 /**
  * Root object for ESA dashboard payloads.
@@ -10,9 +9,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 public class ESA {
     public String title;
     public String icon; // optional top-level icon for the dashboard
-     @JsonAlias({"governance", "governance"})
     public Governance governance;
-     @JsonAlias({"capabilities", "capabilities"})
     public Capabilities capabilities;
 
     @Override

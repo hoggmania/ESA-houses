@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RateLimiter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">quarkus-dashboard-generator</a> &gt; <a href="index.source.html" class="el_package">io.hoggmania.dashboard.util</a> &gt; <span class="el_source">RateLimiter.java</span></div><h1>RateLimiter.java</h1><pre class="source lang-java linenums">package io.hoggmania.dashboard.util;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * Simple token bucket rate limiter for API calls.
+ * Thread-safe implementation using atomic operations.
+ */
+public class RateLimiter {
+    
+    private final int maxRequests;
+    private final Duration windowDuration;
+<span class="nc" id="L16">    private final ConcurrentHashMap&lt;String, RequestWindow&gt; windows = new ConcurrentHashMap&lt;&gt;();</span>
+    
+    /**
+     * Creates a new rate limiter.
+     * 
+     * @param maxRequests maximum number of requests allowed in the time window
+     * @param windowDuration the duration of the time window
+     */
+<span class="nc" id="L24">    public RateLimiter(int maxRequests, Duration windowDuration) {</span>
+<span class="nc" id="L25">        this.maxRequests = maxRequests;</span>
+<span class="nc" id="L26">        this.windowDuration = windowDuration;</span>
+<span class="nc" id="L27">    }</span>
+    
+    /**
+     * Attempts to acquire a permit for the given key.
+     * 
+     * @param key the identifier for rate limiting (e.g., user ID, IP address)
+     * @return true if the request is allowed, false if rate limit exceeded
+     */
+    public boolean tryAcquire(String key) {
+<span class="nc" id="L36">        RequestWindow window = windows.computeIfAbsent(key, k -&gt; new RequestWindow());</span>
+<span class="nc" id="L37">        return window.tryAcquire();</span>
+    }
+    
+    /**
+     * Checks if a request would be allowed without consuming a permit.
+     * 
+     * @param key the identifier for rate limiting
+     * @return true if the request would be allowed
+     */
+    public boolean wouldAllow(String key) {
+<span class="nc" id="L47">        RequestWindow window = windows.get(key);</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        if (window == null) {</span>
+<span class="nc" id="L49">            return true;</span>
+        }
+<span class="nc" id="L51">        return window.wouldAllow();</span>
+    }
+    
+    /**
+     * Gets the remaining requests for the given key.
+     * 
+     * @param key the identifier for rate limiting
+     * @return the number of remaining requests in the current window
+     */
+    public int remainingRequests(String key) {
+<span class="nc" id="L61">        RequestWindow window = windows.get(key);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (window == null) {</span>
+<span class="nc" id="L63">            return maxRequests;</span>
+        }
+<span class="nc" id="L65">        return window.remainingRequests();</span>
+    }
+    
+    /**
+     * Clears all rate limiting data.
+     */
+    public void clear() {
+<span class="nc" id="L72">        windows.clear();</span>
+<span class="nc" id="L73">    }</span>
+    
+<span class="nc" id="L75">    private class RequestWindow {</span>
+<span class="nc" id="L76">        private volatile Instant windowStart = Instant.now();</span>
+<span class="nc" id="L77">        private final AtomicInteger requestCount = new AtomicInteger(0);</span>
+        
+        boolean tryAcquire() {
+<span class="nc" id="L80">            resetIfExpired();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            return requestCount.incrementAndGet() &lt;= maxRequests;</span>
+        }
+        
+        boolean wouldAllow() {
+<span class="nc" id="L85">            resetIfExpired();</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">            return requestCount.get() &lt; maxRequests;</span>
+        }
+        
+        int remainingRequests() {
+<span class="nc" id="L90">            resetIfExpired();</span>
+<span class="nc" id="L91">            return Math.max(0, maxRequests - requestCount.get());</span>
+        }
+        
+        private void resetIfExpired() {
+<span class="nc" id="L95">            Instant now = Instant.now();</span>
+<span class="nc" id="L96">            Instant expiry = windowStart.plus(windowDuration);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">            if (now.isAfter(expiry)) {</span>
+<span class="nc" id="L98">                synchronized (this) {</span>
+                    // Double-check after acquiring lock
+<span class="nc bnc" id="L100" title="All 2 branches missed.">                    if (now.isAfter(windowStart.plus(windowDuration))) {</span>
+<span class="nc" id="L101">                        windowStart = now;</span>
+<span class="nc" id="L102">                        requestCount.set(0);</span>
+                    }
+<span class="nc" id="L104">                }</span>
+            }
+<span class="nc" id="L106">        }</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

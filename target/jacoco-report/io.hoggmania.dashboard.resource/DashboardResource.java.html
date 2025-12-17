@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DashboardResource.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">quarkus-dashboard-generator</a> &gt; <a href="index.source.html" class="el_package">io.hoggmania.dashboard.resource</a> &gt; <span class="el_source">DashboardResource.java</span></div><h1>DashboardResource.java</h1><pre class="source lang-java linenums">package io.hoggmania.dashboard.resource;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hoggmania.dashboard.model.ESA;
+import io.hoggmania.dashboard.service.SvgService;
+import io.hoggmania.dashboard.service.InitiativesPageService;
+import io.hoggmania.dashboard.exception.ValidationException;
+import io.quarkus.logging.Log;
+import io.quarkus.qute.Location;
+import io.quarkus.qute.Template;
+
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import java.util.Base64;
+
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
+@Path(&quot;/api/v1/dashboard&quot;)
+@Tag(name = &quot;Dashboard&quot;, description = &quot;Render dashboard SVG or PNG from a JSON model&quot;)
+<span class="fc" id="L29">public class DashboardResource {</span>
+
+    public static final String SAMPLE_PAYLOAD = &quot;{\n&quot; +
+        &quot;  \&quot;title\&quot;: \&quot;Application Security\&quot;,\n&quot; +
+        &quot;  \&quot;icon\&quot;: \&quot;shield\&quot;,\n&quot; +
+        &quot;  \&quot;governance\&quot;: {\n&quot; +
+        &quot;    \&quot;title\&quot;: \&quot;Application Security Governance\&quot;,\n&quot; +
+        &quot;    \&quot;components\&quot;: [\n&quot; +
+        &quot;      {\&quot;name\&quot;:\&quot;Static Code Scanning\&quot;,\&quot;maturity\&quot;:\&quot;MANAGED\&quot;,\&quot;status\&quot;:\&quot;HIGH\&quot;,\&quot;icon\&quot;:\&quot;search\&quot;,\&quot;initiatives\&quot;:2,\&quot;iRag\&quot;:\&quot;green\&quot;,\&quot;rag\&quot;:\&quot;green\&quot;,\&quot;initiative\&quot;:[{\&quot;key\&quot;:\&quot;AS-001\&quot;,\&quot;summary\&quot;:\&quot;Expand SAST coverage\&quot;,\&quot;rag\&quot;:\&quot;green\&quot;}]},\n&quot; +
+        &quot;      {\&quot;name\&quot;:\&quot;RASP Agent\&quot;,\&quot;maturity\&quot;:\&quot;DEFINED\&quot;,\&quot;status\&quot;:\&quot;MEDIUM\&quot;,\&quot;icon\&quot;:\&quot;user\&quot;,\&quot;initiatives\&quot;:1,\&quot;iRag\&quot;:\&quot;amber\&quot;,\&quot;rag\&quot;:\&quot;amber\&quot;,\&quot;initiative\&quot;:[{\&quot;key\&quot;:\&quot;AS-002\&quot;,\&quot;summary\&quot;:\&quot;Pilot runtime agents\&quot;,\&quot;rag\&quot;:\&quot;amber\&quot;}]}\n&quot; +
+        &quot;    ]\n&quot; +
+        &quot;  },\n&quot; +
+        &quot;  \&quot;capabilities\&quot;: {\n&quot; +
+        &quot;    \&quot;title\&quot;: \&quot;Application Security Capabilities\&quot;,\n&quot; +
+        &quot;    \&quot;domains\&quot;: [\n&quot; +
+        &quot;      {\n&quot; +
+        &quot;        \&quot;domain\&quot;: \&quot;Application Security Testing\&quot;,\n&quot; +
+        &quot;        \&quot;components\&quot;: [\n&quot; +
+        &quot;          {\&quot;name\&quot;:\&quot;Static Code Scanning\&quot;,\&quot;maturity\&quot;:\&quot;MANAGED\&quot;,\&quot;status\&quot;:\&quot;HIGH\&quot;,\&quot;icon\&quot;:\&quot;search\&quot;,\&quot;initiatives\&quot;:3,\&quot;iRag\&quot;:\&quot;green\&quot;,\&quot;rag\&quot;:\&quot;green\&quot;,\&quot;initiative\&quot;:[{\&quot;key\&quot;:\&quot;AS-003\&quot;,\&quot;summary\&quot;:\&quot;Automate onboarding\&quot;,\&quot;rag\&quot;:\&quot;green\&quot;}]},\n&quot; +
+        &quot;          {\&quot;name\&quot;:\&quot;RASP Agent\&quot;,\&quot;maturity\&quot;:\&quot;DEFINED\&quot;,\&quot;status\&quot;:\&quot;MEDIUM\&quot;,\&quot;icon\&quot;:\&quot;user\&quot;,\&quot;initiatives\&quot;:1,\&quot;iRag\&quot;:\&quot;amber\&quot;,\&quot;rag\&quot;:\&quot;amber\&quot;,\&quot;initiative\&quot;:[{\&quot;key\&quot;:\&quot;AS-004\&quot;,\&quot;summary\&quot;:\&quot;Expand telemetry\&quot;,\&quot;rag\&quot;:\&quot;amber\&quot;}]}\n&quot; +
+        &quot;        ]\n&quot; +
+        &quot;      }\n&quot; +
+        &quot;    ]\n&quot; +
+        &quot;  }\n&quot; +
+        &quot;}&quot;;
+
+    @Inject
+    SvgService svgService;
+
+    @Inject
+    InitiativesPageService initiativesPageService;
+
+    @Inject
+    ObjectMapper mapper;
+
+    @Inject
+    @Location(&quot;preview.html.qute&quot;)
+    Template previewTemplate;
+
+    @POST
+    @Path(&quot;/svg&quot;)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(&quot;image/svg+xml&quot;)
+    @Operation(summary = &quot;Render SVG&quot;, description = &quot;Renders an SVG dashboard using the provided JSON model&quot;)
+    @APIResponse(responseCode = &quot;200&quot;, description = &quot;SVG image&quot;, content = @Content(mediaType = &quot;image/svg+xml&quot;))
+    public Response svg(
+            @RequestBody(required = true,
+                content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ESA.class),
+                    examples = {
+                        @ExampleObject(name = &quot;sample&quot;,
+                            description = &quot;Sample hierarchical payload with nested initiatives&quot;,
+                            value = SAMPLE_PAYLOAD)
+                    }
+                )
+            ) JsonNode model) {
+        // Validate input
+<span class="pc bpc" id="L87" title="2 of 4 branches missed.">        if (model == null || model.isNull()) {</span>
+<span class="nc" id="L88">            throw new ValidationException(&quot;Request body cannot be null or empty&quot;);</span>
+        }
+        
+        // Parse full JSON into ESA root DTO first
+<span class="fc" id="L92">        ESA esa = mapper.convertValue(model, ESA.class);</span>
+<span class="fc" id="L93">        String svg = svgService.renderSvg(esa);</span>
+<span class="fc" id="L94">        return Response.ok(svg).build();</span>
+    }
+
+    @POST
+    @Path(&quot;/png&quot;)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(&quot;image/png&quot;)
+    @Operation(summary = &quot;Render PNG&quot;, description = &quot;Renders a PNG by first generating an SVG then converting via Batik&quot;)
+    @APIResponse(responseCode = &quot;200&quot;, description = &quot;PNG image&quot;, content = @Content(mediaType = &quot;image/png&quot;))
+    public Response png(
+            @RequestBody(required = true,
+                content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ESA.class),
+                    examples = {
+                        @ExampleObject(name = &quot;sample&quot;,
+                            description = &quot;Sample hierarchical payload with nested initiatives&quot;,
+                            value = SAMPLE_PAYLOAD)
+                    }
+                )
+            ) JsonNode model) throws Exception {
+        // Validate input
+<span class="pc bpc" id="L116" title="2 of 4 branches missed.">        if (model == null || model.isNull()) {</span>
+<span class="nc" id="L117">            throw new ValidationException(&quot;Request body cannot be null or empty&quot;);</span>
+        }
+        
+        // Parse full JSON into ESA root DTO first
+<span class="fc" id="L121">        ESA esa = mapper.convertValue(model, ESA.class);</span>
+<span class="fc" id="L122">        String svg = svgService.renderSvg(esa);</span>
+<span class="fc" id="L123">        byte[] png = svgService.renderPngFromSvg(svg, 150f);</span>
+<span class="fc" id="L124">        return Response.ok(png).build();</span>
+    }
+
+    @POST
+    @Path(&quot;/preview&quot;)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_HTML)
+    @Operation(summary = &quot;Preview Dashboard&quot;, description = &quot;Renders an HTML page with inline SVG and PNG previews&quot;)
+    @APIResponse(responseCode = &quot;200&quot;, description = &quot;HTML preview page&quot;, content = @Content(mediaType = MediaType.TEXT_HTML))
+    public Response preview(
+            @RequestBody(required = true,
+                content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ESA.class),
+                    examples = {
+                        @ExampleObject(name = &quot;sample&quot;,
+                            description = &quot;Sample hierarchical payload with nested initiatives&quot;,
+                            value = SAMPLE_PAYLOAD)
+                    }
+                )
+            ) JsonNode model) throws Exception {
+        // Validate input
+<span class="nc bnc" id="L146" title="All 4 branches missed.">        if (model == null || model.isNull()) {</span>
+<span class="nc" id="L147">            throw new ValidationException(&quot;Request body cannot be null or empty&quot;);</span>
+        }
+
+        // Parse full JSON into ESA root DTO first
+<span class="nc" id="L151">        ESA esa = mapper.convertValue(model, ESA.class);</span>
+<span class="nc" id="L152">        String svg = svgService.renderSvg(esa);</span>
+<span class="nc" id="L153">        byte[] png = svgService.renderPngFromSvg(svg, 150f);</span>
+<span class="nc" id="L154">        String pngBase64 = Base64.getEncoder().encodeToString(png);</span>
+        
+<span class="nc" id="L156">        String html = previewTemplate</span>
+<span class="nc" id="L157">            .data(&quot;svg&quot;, svg)</span>
+<span class="nc" id="L158">            .data(&quot;pngBase64&quot;, pngBase64)</span>
+<span class="nc" id="L159">            .render();</span>
+        
+<span class="nc" id="L161">        return Response.ok(html).build();</span>
+    }
+
+    @POST
+    @Path(&quot;/initiatives&quot;)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_HTML)
+    @Operation(summary = &quot;Render initiatives page&quot;, description = &quot;Renders an HTML page listing every embedded initiative.&quot;)
+    @APIResponse(responseCode = &quot;200&quot;, description = &quot;HTML initiatives table&quot;, content = @Content(mediaType = MediaType.TEXT_HTML))
+    public Response initiatives(
+            @RequestBody(required = true,
+                content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ESA.class),
+                    examples = {
+                        @ExampleObject(name = &quot;sample&quot;,
+                            description = &quot;Payload containing initiative arrays under each component&quot;,
+                            value = SAMPLE_PAYLOAD)
+                    }
+                )
+            ) JsonNode model) {
+<span class="nc bnc" id="L182" title="All 4 branches missed.">        if (model == null || model.isNull()) {</span>
+<span class="nc" id="L183">            throw new ValidationException(&quot;Request body cannot be null or empty&quot;);</span>
+        }
+<span class="nc" id="L185">        ESA esa = mapper.convertValue(model, ESA.class);</span>
+<span class="nc" id="L186">        String payloadRaw = null;</span>
+        try {
+<span class="nc" id="L188">            payloadRaw = mapper.writeValueAsString(model);</span>
+<span class="nc" id="L189">        } catch (Exception e) {</span>
+<span class="nc" id="L190">            Log.warn(&quot;Failed to serialize payload for display&quot;, e);</span>
+<span class="nc" id="L191">        }</span>
+<span class="nc" id="L192">        String html = initiativesPageService.renderInitiativesPage(esa, payloadRaw);</span>
+<span class="nc" id="L193">        return Response.ok(html).build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
