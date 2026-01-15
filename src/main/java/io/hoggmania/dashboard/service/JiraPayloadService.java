@@ -76,7 +76,7 @@ public class JiraPayloadService {
      * @return the complete ESA model
      * @throws ValidationException if the issue structure is invalid or required labels are missing
      */
-    public ESA buildFromUrl(String baseUrl, String issueUrl, String personalToken) {
+    public ESA buildFromUrl(String baseUrl, String issueUrl, String personalToken, Map<String, String> extraHeaders) {
         if (StringUtils.isBlank(baseUrl)) {
             throw new ValidationException("Jira location is required.");
         }
@@ -84,14 +84,14 @@ public class JiraPayloadService {
             throw new ValidationException("Jira issue URL is required.");
         }
         String key = UrlUtils.extractIssueKey(issueUrl);
-        JsonNode root = jiraClient.fetchIssue(baseUrl, key, personalToken);
+        JsonNode root = jiraClient.fetchIssue(baseUrl, key, personalToken, extraHeaders);
         validateRoot(root, key);
 
         ESA esa = new ESA();
         esa.title = root.path("fields").path("summary").asText("ESA Dashboard");
         esa.icon = "shield";
 
-        Map<String, JsonNode> linkedIssues = loadLinkedIssues(root, baseUrl, personalToken);
+        Map<String, JsonNode> linkedIssues = loadLinkedIssues(root, baseUrl, personalToken, extraHeaders);
         JsonNode governanceNode = findByLabel(linkedIssues, "ESA-Governance");
         JsonNode capabilitiesNode = findByLabel(linkedIssues, "ESA-Capabilities");
         if (governanceNode == null) {
@@ -101,44 +101,44 @@ public class JiraPayloadService {
             throw new ValidationException("Root issue " + key + " must have a linked issue labelled ESA-Capabilities");
         }
 
-        esa.governance = buildGovernance(governanceNode, baseUrl, personalToken);
-        esa.capabilities = buildCapabilities(capabilitiesNode, baseUrl, personalToken);
+        esa.governance = buildGovernance(governanceNode, baseUrl, personalToken, extraHeaders);
+        esa.capabilities = buildCapabilities(capabilitiesNode, baseUrl, personalToken, extraHeaders);
         return esa;
     }
 
-    private Governance buildGovernance(JsonNode governanceIssue, String baseUrl, String token) {
+    private Governance buildGovernance(JsonNode governanceIssue, String baseUrl, String token, Map<String, String> extraHeaders) {
         Governance governance = new Governance();
         governance.title = governanceIssue.path("fields").path("summary").asText("Governance");
-        governance.components = toComponentList(resolveLinkedFeatures(governanceIssue, baseUrl, token), baseUrl, token);
+        governance.components = toComponentList(resolveLinkedFeatures(governanceIssue, baseUrl, token, extraHeaders), baseUrl, token, extraHeaders);
         return governance;
     }
 
-    private Capabilities buildCapabilities(JsonNode capabilitiesIssue, String baseUrl, String token) {
+    private Capabilities buildCapabilities(JsonNode capabilitiesIssue, String baseUrl, String token, Map<String, String> extraHeaders) {
         Capabilities capabilities = new Capabilities();
         capabilities.title = capabilitiesIssue.path("fields").path("summary").asText("Capabilities");
         capabilities.icon = "chart";
-        List<JsonNode> domains = resolveLinkedIssues(capabilitiesIssue, "Epic", baseUrl, token);
+        List<JsonNode> domains = resolveLinkedIssues(capabilitiesIssue, "Epic", baseUrl, token, extraHeaders);
         List<Domain> domainList = new ArrayList<>();
         for (JsonNode domainIssue : domains) {
             Domain domain = new Domain();
             domain.domain = domainIssue.path("fields").path("summary").asText("Domain");
             domain.icon = inferIconFromLabels(domainIssue);
-            domain.components = toComponentList(resolveLinkedFeatures(domainIssue, baseUrl, token), baseUrl, token);
+            domain.components = toComponentList(resolveLinkedFeatures(domainIssue, baseUrl, token, extraHeaders), baseUrl, token, extraHeaders);
             domainList.add(domain);
         }
         capabilities.domains = domainList;
         return capabilities;
     }
 
-    private List<ComponentItem> toComponentList(List<JsonNode> featureIssues, String baseUrl, String token) {
+    private List<ComponentItem> toComponentList(List<JsonNode> featureIssues, String baseUrl, String token, Map<String, String> extraHeaders) {
         List<ComponentItem> components = new ArrayList<>();
         for (JsonNode issue : featureIssues) {
-            components.add(toComponent(issue, baseUrl, token));
+            components.add(toComponent(issue, baseUrl, token, extraHeaders));
         }
         return components;
     }
 
-    private ComponentItem toComponent(JsonNode issue, String baseUrl, String token) {
+    private ComponentItem toComponent(JsonNode issue, String baseUrl, String token, Map<String, String> extraHeaders) {
         ComponentItem component = new ComponentItem();
         component.name = issue.path("fields").path("summary").asText("Component");
         component.capability = extractLabel(issue, CAPABILITY_PATTERN).orElse(component.name);
@@ -148,7 +148,7 @@ public class JiraPayloadService {
         component.rag = extractLabel(issue, RAG_PATTERN).orElse("green").toLowerCase(Locale.ENGLISH);
         component.iRag = component.rag;
         component.doubleBorder = hasLabel(issue, "ESA-Double");
-        List<JsonNode> initiativeIssues = resolveLinkedInitiatives(issue, baseUrl, token);
+        List<JsonNode> initiativeIssues = resolveLinkedInitiatives(issue, baseUrl, token, extraHeaders);
         component.initiativeDetails = buildInitiatives(initiativeIssues, baseUrl);
         component.initiatives = component.initiativeDetails != null ? component.initiativeDetails.size() : 0;
         return component;
@@ -185,18 +185,18 @@ public class JiraPayloadService {
         return node.asText("");
     }
 
-    private List<JsonNode> resolveLinkedFeatures(JsonNode parentIssue, String baseUrl, String token) {
-        return resolveLinkedIssues(parentIssue, "Feature", baseUrl, token);
+    private List<JsonNode> resolveLinkedFeatures(JsonNode parentIssue, String baseUrl, String token, Map<String, String> extraHeaders) {
+        return resolveLinkedIssues(parentIssue, "Feature", baseUrl, token, extraHeaders);
     }
 
-    private List<JsonNode> resolveLinkedIssues(JsonNode parentIssue, String expectedIssueType, String baseUrl, String token) {
+    private List<JsonNode> resolveLinkedIssues(JsonNode parentIssue, String expectedIssueType, String baseUrl, String token, Map<String, String> extraHeaders) {
         List<JsonNode> linked = new ArrayList<>();
         for (JsonNode link : parentIssue.path("fields").path("issuelinks")) {
             JsonNode raw = link.has("outwardIssue") ? link.path("outwardIssue") : link.path("inwardIssue");
             if (raw.isMissingNode()) {
                 continue;
             }
-            JsonNode issue = jiraClient.fetchIssue(baseUrl, raw.path("key").asText(), token);
+            JsonNode issue = jiraClient.fetchIssue(baseUrl, raw.path("key").asText(), token, extraHeaders);
             String typeName = issue.path("fields").path("issuetype").path("name").asText();
             if (expectedIssueType == null || typeName.equalsIgnoreCase(expectedIssueType)) {
                 linked.add(issue);
@@ -205,14 +205,14 @@ public class JiraPayloadService {
         return linked;
     }
 
-    private List<JsonNode> resolveLinkedInitiatives(JsonNode issue, String baseUrl, String token) {
+    private List<JsonNode> resolveLinkedInitiatives(JsonNode issue, String baseUrl, String token, Map<String, String> extraHeaders) {
         List<JsonNode> linked = new ArrayList<>();
         for (JsonNode link : issue.path("fields").path("issuelinks")) {
             JsonNode raw = link.has("outwardIssue") ? link.path("outwardIssue") : link.path("inwardIssue");
             if (raw.isMissingNode()) {
                 continue;
             }
-            JsonNode child = jiraClient.fetchIssue(baseUrl, raw.path("key").asText(), token);
+            JsonNode child = jiraClient.fetchIssue(baseUrl, raw.path("key").asText(), token, extraHeaders);
             String typeName = child.path("fields").path("issuetype").path("name").asText();
             if (INITIATIVE_ISSUE_TYPES.contains(typeName)) {
                 linked.add(child);
@@ -221,12 +221,12 @@ public class JiraPayloadService {
         return linked;
     }
 
-    private Map<String, JsonNode> loadLinkedIssues(JsonNode issue, String baseUrl, String token) {
+    private Map<String, JsonNode> loadLinkedIssues(JsonNode issue, String baseUrl, String token, Map<String, String> extraHeaders) {
         Map<String, JsonNode> map = new HashMap<>();
         for (JsonNode link : issue.path("fields").path("issuelinks")) {
             JsonNode raw = link.has("outwardIssue") ? link.path("outwardIssue") : link.path("inwardIssue");
             if (raw.isMissingNode()) continue;
-            JsonNode full = jiraClient.fetchIssue(baseUrl, raw.path("key").asText(), token);
+            JsonNode full = jiraClient.fetchIssue(baseUrl, raw.path("key").asText(), token, extraHeaders);
             for (String label : collectLabels(full)) {
                 map.put(label, full);
             }

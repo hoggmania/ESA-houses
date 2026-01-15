@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ESA.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">quarkus-dashboard-generator</a> &gt; <a href="index.source.html" class="el_package">io.hoggmania.dashboard.model</a> &gt; <span class="el_source">ESA.java</span></div><h1>ESA.java</h1><pre class="source lang-java linenums">package io.hoggmania.dashboard.model;
 
 import io.hoggmania.dashboard.exception.ValidationException;
+import java.util.Map;
 
 /**
  * Root object for ESA dashboard payloads.
  * Wraps the previous top-level fields under a single root for consistency.
  */
-<span class="fc" id="L9">public class ESA {</span>
+<span class="fc" id="L10">public class ESA {</span>
     public String title;
     public String icon; // optional top-level icon for the dashboard
+    public Map&lt;String, String&gt; attributes; // optional extra metadata for downstream consumers
     public Governance governance;
     public Capabilities capabilities;
 
     @Override
     public String toString() {
-<span class="fc" id="L17">        return &quot;ESA [title=&quot; + title + &quot;, icon=&quot; + icon + &quot;, governance=&quot; + governance + &quot;, capabilities=&quot; + capabilities + &quot;]&quot;;</span>
+<span class="fc" id="L19">        return &quot;ESA [title=&quot; + title + &quot;, icon=&quot; + icon + &quot;, attributes=&quot; + attributes</span>
+                + &quot;, governance=&quot; + governance + &quot;, capabilities=&quot; + capabilities + &quot;]&quot;;
     }
 
 
@@ -22,70 +25,70 @@ import io.hoggmania.dashboard.exception.ValidationException;
      * Validates the ESA model structure and required fields
      */
     public static void validateESA(ESA root) {
-<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (root == null) {</span>
-<span class="fc" id="L26">            throw new ValidationException(&quot;ESA root object cannot be null&quot;);</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (root == null) {</span>
+<span class="fc" id="L29">            throw new ValidationException(&quot;ESA root object cannot be null&quot;);</span>
         }
         
         // Validate governance section
-<span class="pc bpc" id="L30" title="1 of 2 branches missed.">        if (root.governance != null) {</span>
-<span class="pc bpc" id="L31" title="1 of 2 branches missed.">            if (root.governance.components != null) {</span>
-<span class="fc bfc" id="L32" title="All 2 branches covered.">                for (int i = 0; i &lt; root.governance.components.size(); i++) {</span>
-<span class="fc" id="L33">                    ComponentItem comp = root.governance.components.get(i);</span>
-<span class="fc" id="L34">                    validateComponent(comp, &quot;governance&quot;, i);</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        if (root.governance != null) {</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">            if (root.governance.components != null) {</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">                for (int i = 0; i &lt; root.governance.components.size(); i++) {</span>
+<span class="fc" id="L36">                    ComponentItem comp = root.governance.components.get(i);</span>
+<span class="fc" id="L37">                    validateComponent(comp, &quot;governance&quot;, i);</span>
                 }
             }
         }
         
         // Validate capabilities section
-<span class="pc bpc" id="L40" title="2 of 4 branches missed.">        if (root.capabilities != null &amp;&amp; root.capabilities.domains != null) {</span>
-<span class="fc bfc" id="L41" title="All 2 branches covered.">            for (int domainIdx = 0; domainIdx &lt; root.capabilities.domains.size(); domainIdx++) {</span>
-<span class="fc" id="L42">                Domain domain = root.capabilities.domains.get(domainIdx);</span>
-<span class="fc bfc" id="L43" title="All 2 branches covered.">                if (domain == null) {</span>
-<span class="fc" id="L44">                    throw new ValidationException(&quot;Domain at index &quot; + domainIdx + &quot; cannot be null&quot;);</span>
+<span class="pc bpc" id="L43" title="2 of 4 branches missed.">        if (root.capabilities != null &amp;&amp; root.capabilities.domains != null) {</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">            for (int domainIdx = 0; domainIdx &lt; root.capabilities.domains.size(); domainIdx++) {</span>
+<span class="fc" id="L45">                Domain domain = root.capabilities.domains.get(domainIdx);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">                if (domain == null) {</span>
+<span class="fc" id="L47">                    throw new ValidationException(&quot;Domain at index &quot; + domainIdx + &quot; cannot be null&quot;);</span>
                 }
                 
-<span class="pc bpc" id="L47" title="1 of 2 branches missed.">                if (domain.components != null) {</span>
-<span class="fc bfc" id="L48" title="All 2 branches covered.">                    for (int compIdx = 0; compIdx &lt; domain.components.size(); compIdx++) {</span>
-<span class="fc" id="L49">                        ComponentItem comp = domain.components.get(compIdx);</span>
-<span class="fc" id="L50">                        String location = &quot;capabilities.domains[&quot; + domainIdx + &quot;]&quot;;</span>
-<span class="fc" id="L51">                        validateComponent(comp, location, compIdx);</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">                if (domain.components != null) {</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">                    for (int compIdx = 0; compIdx &lt; domain.components.size(); compIdx++) {</span>
+<span class="fc" id="L52">                        ComponentItem comp = domain.components.get(compIdx);</span>
+<span class="fc" id="L53">                        String location = &quot;capabilities.domains[&quot; + domainIdx + &quot;]&quot;;</span>
+<span class="fc" id="L54">                        validateComponent(comp, location, compIdx);</span>
                     }
                 }
             }
         }
-<span class="fc" id="L56">    }</span>
+<span class="fc" id="L59">    }</span>
     
     /**
      * Validates individual component items
      */
     private static void validateComponent(ComponentItem comp, String section, int index) {
-<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (comp == null) {</span>
-<span class="fc" id="L63">            throw new ValidationException(&quot;Component at &quot; + section + &quot;[&quot; + index + &quot;] cannot be null&quot;);</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (comp == null) {</span>
+<span class="fc" id="L66">            throw new ValidationException(&quot;Component at &quot; + section + &quot;[&quot; + index + &quot;] cannot be null&quot;);</span>
         }
         
-<span class="fc" id="L66">        String location = section + &quot;[&quot; + index + &quot;]&quot;;</span>
+<span class="fc" id="L69">        String location = section + &quot;[&quot; + index + &quot;]&quot;;</span>
         
         // Validate required enums
-<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (comp.status == null) {</span>
-<span class="fc" id="L70">            throw new ValidationException(&quot;Component at &quot; + location + &quot; missing required field: statusEnum. &quot;</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (comp.status == null) {</span>
+<span class="fc" id="L73">            throw new ValidationException(&quot;Component at &quot; + location + &quot; missing required field: statusEnum. &quot;</span>
                 + &quot;Must be one of: NOT_EXISTING, LOW, MEDIUM, HIGH, EFFECTIVE&quot;);
         }
         
-<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (comp.maturity == null) {</span>
-<span class="fc" id="L75">            throw new ValidationException(&quot;Component at &quot; + location + &quot; missing required field: maturityEnum. &quot;</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (comp.maturity == null) {</span>
+<span class="fc" id="L78">            throw new ValidationException(&quot;Component at &quot; + location + &quot; missing required field: maturityEnum. &quot;</span>
                 + &quot;Must be one of: NOT_EXISTING, INITIAL, REPEATABLE, DEFINED, MANAGED, OPTIMISED&quot;);
         }
         
         // Validate name is present
-<span class="fc bfc" id="L80" title="All 4 branches covered.">        if (comp.name == null || comp.name.trim().isEmpty()) {</span>
-<span class="fc" id="L81">            throw new ValidationException(&quot;Component at &quot; + location + &quot; missing required field: name&quot;);</span>
+<span class="fc bfc" id="L83" title="All 4 branches covered.">        if (comp.name == null || comp.name.trim().isEmpty()) {</span>
+<span class="fc" id="L84">            throw new ValidationException(&quot;Component at &quot; + location + &quot; missing required field: name&quot;);</span>
         }
         
         // Validate initiatives is non-negative
-<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (comp.initiatives &lt; 0) {</span>
-<span class="fc" id="L86">            throw new ValidationException(&quot;Component at &quot; + location + &quot; has invalid initiatives count: &quot; </span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (comp.initiatives &lt; 0) {</span>
+<span class="fc" id="L89">            throw new ValidationException(&quot;Component at &quot; + location + &quot; has invalid initiatives count: &quot; </span>
                 + comp.initiatives + &quot; (must be &gt;= 0)&quot;);
         }
-<span class="fc" id="L89">    }</span>
+<span class="fc" id="L92">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,6 +1,7 @@
 package io.hoggmania.dashboard.model;
 
 import io.hoggmania.dashboard.exception.ValidationException;
+import java.util.Map;
 
 /**
  * Root object for ESA dashboard payloads.
@@ -9,12 +10,14 @@ import io.hoggmania.dashboard.exception.ValidationException;
 public class ESA {
     public String title;
     public String icon; // optional top-level icon for the dashboard
+    public Map<String, String> attributes; // optional extra metadata for downstream consumers
     public Governance governance;
     public Capabilities capabilities;
 
     @Override
     public String toString() {
-        return "ESA [title=" + title + ", icon=" + icon + ", governance=" + governance + ", capabilities=" + capabilities + "]";
+        return "ESA [title=" + title + ", icon=" + icon + ", attributes=" + attributes
+                + ", governance=" + governance + ", capabilities=" + capabilities + "]";
     }
 
 

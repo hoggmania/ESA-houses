@@ -8,7 +8,8 @@ Generate SVG and PNG dashboard visualizations from hierarchical JSON payloads.
 - **PNG Conversion**: POST JSON → SVG → PNG via Apache Batik (`image/png`)
 - **HTML Preview**: POST JSON → receive HTML page with inline SVG and PNG for easy visual review
 - **OpenAPI/Swagger UI**: Interactive API docs with pre-filled examples at `/q/swagger-ui`
-- **Jira Importer**: Use `/ui/jira` to generate ESA payloads directly from Jira. Provide the HTTPS Jira base URL, the fully qualified root issue link, and a personal access token (PAT) with read rights; credentials are supplied per request so nothing is stored server-side.
+- **Jira Importer**: Use `/ui/jira` to generate ESA payloads directly from Jira. Provide the HTTPS Jira base URL, the fully qualified root issue link, a personal access token (PAT) with read rights, and any extra Jira headers (one per line) to be forwarded on the Jira API call; credentials are supplied per request so nothing is stored server-side.
+- **Jira ESA API**: POST `/api/v1/jira/esa` with a Jira issue URL (and optional base URL) plus attribute pairs to generate ESA JSON.
 - **Custom Trust Store**: If your Jira instance uses a private CA, point the app at a trust store via `jira.trust-store` / `jira.trust-store-password` in `application.properties` and all outbound HTTPS calls will honor it.
 
 ## Quick Start
@@ -35,6 +36,9 @@ Renders a PNG dashboard (SVG → PNG via Batik). Returns `image/png`.
 
 ### POST `/api/v1/dashboard/preview`
 Renders an HTML page with inline SVG and PNG for easy visual review in the browser. Returns `text/html`.
+
+### POST `/api/v1/jira/esa`
+Generates ESA JSON from a Jira root issue URL. Accepts optional attribute pairs that are included in the JSON response.
 
 ## JSON Structure
 

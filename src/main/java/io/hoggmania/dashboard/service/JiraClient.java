@@ -8,6 +8,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.io.FileInputStream;
 import java.security.KeyStore;
+import java.util.Map;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -78,7 +79,7 @@ public class JiraClient {
      * @return the issue data as a JsonNode
      * @throws ValidationException if parameters are invalid, rate limit is exceeded, or the API call fails
      */
-    public JsonNode fetchIssue(String baseUrl, String issueKey, String personalAccessToken) {
+    public JsonNode fetchIssue(String baseUrl, String issueKey, String personalAccessToken, Map<String, String> extraHeaders) {
         if (StringUtils.isBlank(baseUrl)) {
             throw new ValidationException("Jira base URL is required.");
         }
@@ -99,15 +100,91 @@ public class JiraClient {
             String normalizedBase = UrlUtils.normalizeBaseUrl(baseUrl);
             String encodedKey = UrlUtils.encode(issueKey);
             URI uri = URI.create(normalizedBase + "/rest/api/3/issue/" + encodedKey + "?expand=renderedFields,changelog");
-            HttpRequest request = HttpRequest.newBuilder(uri)
+            HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
                     .timeout(Duration.ofSeconds(20))
                     .GET()
                     .header("Accept", "application/json")
-                    .header("Authorization", "Bearer " + personalAccessToken.trim())
-                    .build();
+                    .header("Authorization", "Bearer " + personalAccessToken.trim());
+            if (extraHeaders != null && !extraHeaders.isEmpty()) {
+                for (Map.Entry<String, String> entry : extraHeaders.entrySet()) {
+                    String name = entry.getKey();
+                    String value = entry.getValue();
+                    if (StringUtils.isBlank(name)) {
+                        continue;
+                    }
+                    if ("authorization".equalsIgnoreCase(name) || "accept".equalsIgnoreCase(name)) {
+                        continue;
+                    }
+                    builder.header(name.trim(), value == null ? "" : value);
+                }
+            }
+            HttpRequest request = builder.build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 400) {
                 throw new ValidationException("Failed to fetch Jira issue " + issueKey + ": HTTP " + response.statusCode());
+            }
+            return mapper.readTree(response.body());
+        } catch (ValidationException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new ValidationException("Unable to call Jira API: " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ValidationException("Jira API call was interrupted: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Executes a Jira JQL search and returns the raw response body.
+     *
+     * @param baseUrl the Jira instance base URL
+     * @param jql the JQL query
+     * @param personalAccessToken the personal access token for authentication
+     * @param extraHeaders extra headers to pass to Jira
+     * @return the search response as a JsonNode
+     */
+    public JsonNode searchIssues(String baseUrl, String jql, String personalAccessToken, Map<String, String> extraHeaders) {
+        if (StringUtils.isBlank(baseUrl)) {
+            throw new ValidationException("Jira base URL is required.");
+        }
+        if (StringUtils.isBlank(jql)) {
+            throw new ValidationException("JQL query is required.");
+        }
+        if (StringUtils.isBlank(personalAccessToken)) {
+            throw new ValidationException("A Jira personal access token is required.");
+        }
+
+        if (!rateLimiter.tryAcquire(baseUrl)) {
+            throw new ValidationException("Rate limit exceeded for Jira instance: " + baseUrl +
+                ". Please try again later.");
+        }
+
+        try {
+            String normalizedBase = UrlUtils.normalizeBaseUrl(baseUrl);
+            String encodedJql = UrlUtils.encode(jql);
+            URI uri = URI.create(normalizedBase + "/rest/api/3/search?jql=" + encodedJql + "&maxResults=50&fields=summary,labels,issuetype");
+            HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
+                    .timeout(Duration.ofSeconds(20))
+                    .GET()
+                    .header("Accept", "application/json")
+                    .header("Authorization", "Bearer " + personalAccessToken.trim());
+            if (extraHeaders != null && !extraHeaders.isEmpty()) {
+                for (Map.Entry<String, String> entry : extraHeaders.entrySet()) {
+                    String name = entry.getKey();
+                    String value = entry.getValue();
+                    if (StringUtils.isBlank(name)) {
+                        continue;
+                    }
+                    if ("authorization".equalsIgnoreCase(name) || "accept".equalsIgnoreCase(name)) {
+                        continue;
+                    }
+                    builder.header(name.trim(), value == null ? "" : value);
+                }
+            }
+            HttpRequest request = builder.build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 400) {
+                throw new ValidationException("Jira search failed: HTTP " + response.statusCode());
             }
             return mapper.readTree(response.body());
         } catch (ValidationException e) {

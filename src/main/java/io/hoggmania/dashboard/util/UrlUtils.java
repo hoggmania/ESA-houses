@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 /**
  * Utility methods for URL manipulation and validation.
@@ -115,6 +116,42 @@ public final class UrlUtils {
         } catch (IllegalArgumentException ex) {
             return value;
         }
+    }
+
+    /**
+     * Infers the Jira base URL from a full issue URL.
+     *
+     * @param issueUrl the full issue URL (e.g., https://jira.example.com/browse/PROJ-123)
+     * @return the inferred base URL
+     */
+    public static String inferBaseUrl(String issueUrl) {
+        if (StringUtils.isBlank(issueUrl)) {
+            throw new ValidationException("Jira issue URL is required.");
+        }
+
+        URI uri;
+        try {
+            uri = URI.create(issueUrl.trim());
+        } catch (IllegalArgumentException ex) {
+            throw new ValidationException("Invalid Jira URL format: " + ex.getMessage());
+        }
+
+        if (StringUtils.isBlank(uri.getScheme()) || StringUtils.isBlank(uri.getRawAuthority())) {
+            throw new ValidationException("Jira URL must be absolute and include a scheme.");
+        }
+
+        String path = uri.getPath();
+        String basePath = "";
+        if (!StringUtils.isBlank(path)) {
+            String lower = path.toLowerCase(Locale.ENGLISH);
+            int browseIndex = lower.indexOf("/browse/");
+            if (browseIndex >= 0) {
+                basePath = path.substring(0, browseIndex);
+            }
+        }
+
+        String baseUrl = uri.getScheme() + "://" + uri.getRawAuthority() + basePath;
+        return normalizeBaseUrl(baseUrl);
     }
 }
 

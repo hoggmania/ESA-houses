@@ -3,8 +3,12 @@ package io.hoggmania.dashboard.resource;
 import io.hoggmania.dashboard.model.ESA;
 import io.hoggmania.dashboard.service.SvgService;
 import io.hoggmania.dashboard.service.InitiativesPageService;
+import io.hoggmania.dashboard.service.JiraDiscoveryService;
 import io.hoggmania.dashboard.service.JiraPayloadService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hoggmania.dashboard.exception.ValidationException;
+import io.hoggmania.dashboard.model.JiraRootIssue;
+import io.hoggmania.dashboard.util.StringUtils;
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
@@ -19,6 +23,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Path("/ui")
 @RequestScoped
@@ -47,6 +54,9 @@ public class UIResource {
 
     @Inject
     JiraPayloadService jiraPayloadService;
+
+    @Inject
+    JiraDiscoveryService jiraDiscoveryService;
 
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -120,25 +130,34 @@ public class UIResource {
                 .data("payload", null)
                 .data("jiraUrl", "")
                 .data("jiraBase", "")
+                .data("jiraHeaders", "")
+                .data("rootIssues", null)
+                .data("selectedRootKey", "")
                 .render();
         return Response.ok(html).type(MediaType.TEXT_HTML).build();
     }
 
     @POST
-    @Path("/jira/generate")
+    @Path("/jira/discover")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
-    public Response jiraGenerate(@FormParam("jiraBase") String jiraBase,
+    public Response jiraDiscover(@FormParam("jiraBase") String jiraBase,
                                  @FormParam("jiraUrl") String jiraUrl,
-                                 @FormParam("jiraToken") String jiraToken) {
+                                 @FormParam("jiraToken") String jiraToken,
+                                 @FormParam("jiraHeaders") String jiraHeaders,
+                                 @FormParam("jiraRootKey") String jiraRootKey) {
         try {
-            ESA esa = jiraPayloadService.buildFromUrl(jiraBase, jiraUrl, jiraToken);
-            String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(esa);
+            Map<String, String> headers = parseHeaders(jiraHeaders);
+            List<JiraRootIssue> roots = jiraDiscoveryService.findEsaRootIssues(jiraBase, jiraToken, headers);
+            String message = roots.isEmpty() ? "No ESA-Root issues found." : null;
             String html = jiraTemplate
-                    .data("message", null)
-                    .data("payload", json)
-                    .data("jiraUrl", jiraUrl)
-                    .data("jiraBase", jiraBase)
+                    .data("message", message)
+                    .data("payload", null)
+                    .data("jiraUrl", jiraUrl == null ? "" : jiraUrl)
+                    .data("jiraBase", jiraBase == null ? "" : jiraBase)
+                    .data("jiraHeaders", jiraHeaders == null ? "" : jiraHeaders)
+                    .data("rootIssues", roots)
+                    .data("selectedRootKey", jiraRootKey == null ? "" : jiraRootKey)
                     .render();
             return Response.ok(html).type(MediaType.TEXT_HTML).build();
         } catch (Exception e) {
@@ -147,6 +166,49 @@ public class UIResource {
                     .data("payload", null)
                     .data("jiraUrl", jiraUrl == null ? "" : jiraUrl)
                     .data("jiraBase", jiraBase == null ? "" : jiraBase)
+                    .data("jiraHeaders", jiraHeaders == null ? "" : jiraHeaders)
+                    .data("rootIssues", null)
+                    .data("selectedRootKey", jiraRootKey == null ? "" : jiraRootKey)
+                    .render();
+            return Response.status(Response.Status.BAD_REQUEST).entity(html).type(MediaType.TEXT_HTML).build();
+        }
+    }
+
+    @POST
+    @Path("/jira/generate")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public Response jiraGenerate(@FormParam("jiraBase") String jiraBase,
+                                 @FormParam("jiraUrl") String jiraUrl,
+                                 @FormParam("jiraToken") String jiraToken,
+                                 @FormParam("jiraHeaders") String jiraHeaders,
+                                 @FormParam("jiraRootKey") String jiraRootKey) {
+        try {
+            Map<String, String> headers = parseHeaders(jiraHeaders);
+            List<JiraRootIssue> roots = jiraDiscoveryService.findEsaRootIssues(jiraBase, jiraToken, headers);
+            String resolvedJiraUrl = StringUtils.isBlank(jiraRootKey) ? jiraUrl : jiraRootKey;
+            ESA esa = jiraPayloadService.buildFromUrl(jiraBase, resolvedJiraUrl, jiraToken, headers);
+            String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(esa);
+            String html = jiraTemplate
+                    .data("message", null)
+                    .data("payload", json)
+                    .data("jiraUrl", jiraUrl)
+                    .data("jiraBase", jiraBase)
+                    .data("jiraHeaders", jiraHeaders)
+                    .data("rootIssues", roots)
+                    .data("selectedRootKey", jiraRootKey == null ? "" : jiraRootKey)
+                    .render();
+            return Response.ok(html).type(MediaType.TEXT_HTML).build();
+        } catch (Exception e) {
+            String html = jiraTemplate
+                    .data("message", e.getMessage())
+                    .data("payload", null)
+                    .data("jiraUrl", jiraUrl == null ? "" : jiraUrl)
+                    .data("jiraBase", jiraBase == null ? "" : jiraBase)
+                    .data("jiraHeaders", jiraHeaders == null ? "" : jiraHeaders)
+                    .data("rootIssues", jiraBase == null || jiraToken == null ? null
+                            : jiraDiscoveryService.findEsaRootIssues(jiraBase, jiraToken, parseHeaders(jiraHeaders)))
+                    .data("selectedRootKey", jiraRootKey == null ? "" : jiraRootKey)
                     .render();
             return Response.status(Response.Status.BAD_REQUEST).entity(html).type(MediaType.TEXT_HTML).build();
         }
@@ -186,5 +248,33 @@ public class UIResource {
                     .type(MediaType.TEXT_PLAIN)
                     .build();
         }
+    }
+
+    private Map<String, String> parseHeaders(String raw) {
+        if (StringUtils.isBlank(raw)) {
+            return Map.of();
+        }
+        Map<String, String> headers = new LinkedHashMap<>();
+        String[] lines = raw.split("\\r?\\n");
+        for (String line : lines) {
+            String trimmed = line == null ? "" : line.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            int separator = trimmed.indexOf(':');
+            if (separator < 0) {
+                separator = trimmed.indexOf('=');
+            }
+            if (separator < 0) {
+                throw new ValidationException("Invalid header line (expected name:value): " + trimmed);
+            }
+            String name = trimmed.substring(0, separator).trim();
+            String value = trimmed.substring(separator + 1).trim();
+            if (StringUtils.isBlank(name)) {
+                throw new ValidationException("Header name cannot be blank.");
+            }
+            headers.put(name, value);
+        }
+        return headers;
     }
 }

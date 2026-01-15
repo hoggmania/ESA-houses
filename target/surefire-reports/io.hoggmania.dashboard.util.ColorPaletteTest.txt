@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: io.hoggmania.dashboard.util.ColorPaletteTest
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in io.hoggmania.dashboard.util.ColorPaletteTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in io.hoggmania.dashboard.util.ColorPaletteTest
