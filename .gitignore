@@ -1,0 +1,5 @@
+# Build artifacts
+/target/
+
+# Ignore all dot-directories (except .git, which Git always keeps)
+**/.*/
