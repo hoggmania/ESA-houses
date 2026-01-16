@@ -9,6 +9,7 @@ public class InitiativeRow {
     public final String componentCapability;
     public final String key;
     public final String keyHref;
+    public final String anchorId;
     public final String rag;
     public final String ragColor;
     public final String summary;
@@ -24,6 +25,7 @@ public class InitiativeRow {
             String component,
             String key,
             String keyHref,
+            String anchorId,
             String rag,
             String ragColor,
             String summary,
@@ -39,6 +41,7 @@ public class InitiativeRow {
         this.componentCapability = componentCapability;
         this.key = key;
         this.keyHref = keyHref;
+        this.anchorId = anchorId;
         this.rag = rag;
         this.ragColor = ragColor;
         this.summary = summary;

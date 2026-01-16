@@ -49,32 +49,17 @@
       });
     }
 
-    function navigateToHtml(endpoint) {
-      const payload = document.getElementById('payload').value;
-      trySavePayload(payload);
-      fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: payload
-      }).then(async (res) => {
-        const html = await res.text();
-        document.open();
-        document.write(html);
-        document.close();
-      }).catch(err => {
-        alert('Failed to render: ' + err);
+    window.addEventListener('DOMContentLoaded', () => {
+      hydratePayloadFromStorage();
+      const form = document.getElementById('render-form');
+      if (!form) {
+        return;
+      }
+      form.addEventListener('submit', () => {
+        const payload = document.getElementById('payload')?.value || '';
+        trySavePayload(payload);
       });
-    }
-
-    function renderText() {
-      navigateToHtml('/ui/render-text');
-    }
-
-    function renderInitiatives() {
-      navigateToHtml('/ui/render-initiatives');
-    }
-
-    window.addEventListener('DOMContentLoaded', hydratePayloadFromStorage);
+    });
   </script>
 </head>
 <body>
@@ -85,11 +70,11 @@
     <div class="msg error">{message}</div>
   {/if}
 
-  <form onsubmit="event.preventDefault(); renderText();">
+  <form id="render-form" method="post" action="/ui/render">
     <textarea id="payload" name="payload" spellcheck="false">{payload}</textarea>
     <div class="row">
-      <button type="button" onclick="renderText()">Render</button>
-      <button type="button" onclick="renderInitiatives()">Render Initiatives</button>
+      <button type="submit">Render</button>
+      <button type="submit" formaction="/ui/render-initiatives">Render Initiatives</button>
       <button type="button" class="secondary" onclick="pasteSample()">Paste Sample</button>
     </div>
   </form>

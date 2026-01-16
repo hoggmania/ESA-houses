@@ -197,8 +197,18 @@
       </a>
       {/if}
         {#if item.showInitiatives}
+        {#if item.initiativeHref}
+        {#if item.initiativeNewTab}
+        <a xlink:href="{item.initiativeHref}" target="_blank" rel="noopener noreferrer">
+        {#else}
+        <a xlink:href="{item.initiativeHref}">
+        {/if}
+        {/if}
         <circle cx="{initiativeCircleX}" cy="{initiativeCircleY}" r="12" fill="#EC4899" stroke="{item.initiativeStroke}" stroke-width="3"/>
         <text x="{initiativeCircleX}" y="{initiativeTextY}" text-anchor="middle" style="font: 11px sans-serif; font-weight: bold; fill: #FFFFFF;">{item.initiatives}</text>
+        {#if item.initiativeHref}
+        </a>
+        {/if}
         {/if}
     </g>
   {/for}
@@ -275,8 +285,18 @@
         </a>
         {/if}
         {#if item.showInitiatives}
+        {#if item.initiativeHref}
+        {#if item.initiativeNewTab}
+        <a xlink:href="{item.initiativeHref}" target="_blank" rel="noopener noreferrer">
+        {#else}
+        <a xlink:href="{item.initiativeHref}">
+        {/if}
+        {/if}
         <circle cx="{initiativeCircleX}" cy="{initiativeCircleY}" r="12" fill="#EC4899" stroke="{item.initiativeStroke}" stroke-width="3"/>
         <text x="{initiativeCircleX}" y="{initiativeTextY}" text-anchor="middle" style="font: 11px sans-serif; font-weight: bold; fill: #FFFFFF;">{item.initiatives}</text>
+        {#if item.initiativeHref}
+        </a>
+        {/if}
         {/if}
       </g>
     {/for}

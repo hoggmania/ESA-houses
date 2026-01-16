@@ -17,6 +17,8 @@ public class RenderItem {
     public String iconId; // symbol id for icon, e.g., "icon-shield"
     public String nameHref;
     public String capabilityHref;
+    public String initiativeHref;
+    public boolean initiativeNewTab;
     public java.util.List<String> nameLines;
     public java.util.List<String> capabilityLines;
     public float textX;
@@ -45,6 +47,8 @@ public class RenderItem {
         this.iconId = iconId;
         this.nameHref = null;
         this.capabilityHref = null;
+        this.initiativeHref = null;
+        this.initiativeNewTab = false;
         this.nameLines = java.util.Collections.singletonList(this.name != null ? this.name : "");
         this.capabilityLines = java.util.Collections.singletonList(this.capability != null ? this.capability : "");
         this.textX = 0;

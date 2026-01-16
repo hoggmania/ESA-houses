@@ -34,8 +34,58 @@ public class DashboardResource {
         "  \"governance\": {\n" +
         "    \"title\": \"Application Security Governance\",\n" +
         "    \"components\": [\n" +
-        "      {\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":2,\"iRag\":\"green\",\"rag\":\"green\",\"initiative\":[{\"key\":\"AS-001\",\"summary\":\"Expand SAST coverage\",\"rag\":\"green\"}]},\n" +
-        "      {\"name\":\"RASP Agent\",\"maturity\":\"DEFINED\",\"status\":\"MEDIUM\",\"icon\":\"user\",\"initiatives\":1,\"iRag\":\"amber\",\"rag\":\"amber\",\"initiative\":[{\"key\":\"AS-002\",\"summary\":\"Pilot runtime agents\",\"rag\":\"amber\"}]}\n" +
+        "      {\n" +
+        "        \"name\": \"Static Code Scanning\",\n" +
+        "        \"maturity\": \"MANAGED\",\n" +
+        "        \"status\": \"HIGH\",\n" +
+        "        \"icon\": \"search\",\n" +
+        "        \"initiatives\": 2,\n" +
+        "        \"iRag\": \"green\",\n" +
+        "        \"rag\": \"green\",\n" +
+        "        \"initiative\": [\n" +
+        "          {\n" +
+        "            \"key\": \"AS-001\",\n" +
+        "            \"link\": \"https://example.com/initiatives/AS-001\",\n" +
+        "            \"summary\": \"Expand SAST coverage\",\n" +
+        "            \"businessBenefit\": \"Detect critical issues earlier\",\n" +
+        "            \"riskAppetite\": \"Low\",\n" +
+        "            \"toolId\": \"In-Demand\",\n" +
+        "            \"dueDate\": \"2024-12-15\",\n" +
+        "            \"rag\": \"green\"\n" +
+        "          },\n" +
+        "          {\n" +
+        "            \"key\": \"AS-001b\",\n" +
+        "            \"link\": \"https://example.com/initiatives/AS-001b\",\n" +
+        "            \"summary\": \"Introduce SAST guardrails\",\n" +
+        "            \"businessBenefit\": \"Improve self-service onboarding\",\n" +
+        "            \"riskAppetite\": \"Low\",\n" +
+        "            \"toolId\": \"In-Demand\",\n" +
+        "            \"dueDate\": \"2025-04-30\",\n" +
+        "            \"rag\": \"green\"\n" +
+        "          }\n" +
+        "        ]\n" +
+        "      },\n" +
+        "      {\n" +
+        "        \"name\": \"RASP Agent\",\n" +
+        "        \"maturity\": \"DEFINED\",\n" +
+        "        \"status\": \"MEDIUM\",\n" +
+        "        \"icon\": \"user\",\n" +
+        "        \"initiatives\": 1,\n" +
+        "        \"iRag\": \"amber\",\n" +
+        "        \"rag\": \"amber\",\n" +
+        "        \"initiative\": [\n" +
+        "          {\n" +
+        "            \"key\": \"AS-002\",\n" +
+        "            \"link\": \"https://example.com/initiatives/AS-002\",\n" +
+        "            \"summary\": \"Pilot runtime agents\",\n" +
+        "            \"businessBenefit\": \"Reduce exploitation risk\",\n" +
+        "            \"riskAppetite\": \"Medium\",\n" +
+        "            \"toolId\": \"In-Demand\",\n" +
+        "            \"dueDate\": \"2025-02-01\",\n" +
+        "            \"rag\": \"amber\"\n" +
+        "          }\n" +
+        "        ]\n" +
+        "      }\n" +
         "    ]\n" +
         "  },\n" +
         "  \"capabilities\": {\n" +
@@ -44,8 +94,58 @@ public class DashboardResource {
         "      {\n" +
         "        \"domain\": \"Application Security Testing\",\n" +
         "        \"components\": [\n" +
-        "          {\"name\":\"Static Code Scanning\",\"maturity\":\"MANAGED\",\"status\":\"HIGH\",\"icon\":\"search\",\"initiatives\":3,\"iRag\":\"green\",\"rag\":\"green\",\"initiative\":[{\"key\":\"AS-003\",\"summary\":\"Automate onboarding\",\"rag\":\"green\"}]},\n" +
-        "          {\"name\":\"RASP Agent\",\"maturity\":\"DEFINED\",\"status\":\"MEDIUM\",\"icon\":\"user\",\"initiatives\":1,\"iRag\":\"amber\",\"rag\":\"amber\",\"initiative\":[{\"key\":\"AS-004\",\"summary\":\"Expand telemetry\",\"rag\":\"amber\"}]}\n" +
+        "          {\n" +
+        "            \"name\": \"Static Code Scanning\",\n" +
+        "            \"maturity\": \"MANAGED\",\n" +
+        "            \"status\": \"HIGH\",\n" +
+        "            \"icon\": \"search\",\n" +
+        "            \"initiatives\": 3,\n" +
+        "            \"iRag\": \"green\",\n" +
+        "            \"rag\": \"green\",\n" +
+        "            \"initiative\": [\n" +
+        "              {\n" +
+        "                \"key\": \"AS-003\",\n" +
+        "                \"link\": \"https://example.com/initiatives/AS-003\",\n" +
+        "                \"summary\": \"Automate onboarding\",\n" +
+        "                \"businessBenefit\": \"Increase coverage quickly\",\n" +
+        "                \"riskAppetite\": \"Low\",\n" +
+        "                \"toolId\": \"In-Demand\",\n" +
+        "                \"dueDate\": \"2025-01-20\",\n" +
+        "                \"rag\": \"green\"\n" +
+        "              }\n" +
+        "            ]\n" +
+        "          },\n" +
+        "          {\n" +
+        "            \"name\": \"RASP Agent\",\n" +
+        "            \"maturity\": \"DEFINED\",\n" +
+        "            \"status\": \"MEDIUM\",\n" +
+        "            \"icon\": \"user\",\n" +
+        "            \"initiatives\": 2,\n" +
+        "            \"iRag\": \"amber\",\n" +
+        "            \"rag\": \"amber\",\n" +
+        "            \"initiative\": [\n" +
+        "              {\n" +
+        "                \"key\": \"AS-004\",\n" +
+        "                \"link\": \"https://example.com/initiatives/AS-004\",\n" +
+        "                \"summary\": \"Expand telemetry\",\n" +
+        "                \"businessBenefit\": \"Improve runtime visibility\",\n" +
+        "                \"riskAppetite\": \"Medium\",\n" +
+        "                \"toolId\": \"In-Demand\",\n" +
+        "                \"dueDate\": \"2024-11-30\",\n" +
+        "                \"rag\": \"amber\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"key\": \"AS-004b\",\n" +
+        "                \"link\": \"https://example.com/initiatives/AS-004b\",\n" +
+        "                \"summary\": \"Codify alert playbooks\",\n" +
+        "                \"businessBenefit\": \"Accelerate runtime response\",\n" +
+        "                \"riskAppetite\": \"Medium\",\n" +
+        "                \"toolId\": \"In-Demand\",\n" +
+        "                \"dueDate\": \"2025-03-15\",\n" +
+        "                \"rag\": \"amber\"\n" +
+        "              }\n" +
+        "            ]\n" +
+        "          }\n" +
         "        ]\n" +
         "      }\n" +
         "    ]\n" +

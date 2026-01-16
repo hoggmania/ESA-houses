@@ -216,9 +216,9 @@ public class UIResource {
 
     @POST
     @Path("/render-initiatives")
-    @Consumes(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
-    public Response renderInitiatives(String payload) {
+    public Response renderInitiatives(@FormParam("payload") String payload) {
         try {
             ESA esa = objectMapper.readValue(payload, ESA.class);
             String html = initiativesPageService.renderInitiativesPage(esa, payload);

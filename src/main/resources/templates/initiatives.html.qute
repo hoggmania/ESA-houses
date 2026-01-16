@@ -190,7 +190,7 @@
         </tr>
         {#else}
           {#for row in rows}
-          <tr>
+          <tr{#if row.anchorId} id="{row.anchorId}"{/if}>
             <td>{row.capability}</td>
             <td>
               <svg xmlns="http://www.w3.org/2000/svg" width="200" height="55" viewBox="0 0 200 55" role="img" aria-label="{row.component} - {row.componentCapability}">

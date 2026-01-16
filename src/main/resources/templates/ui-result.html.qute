@@ -17,6 +17,42 @@
     .initiatives-wrapper { max-height: 900px; overflow: auto; background: white; border-radius: 8px; }
   </style>
   <script>
+    const INITIATIVE_HASH_KEY = 'esa-initiative-hash';
+
+    function syncInitiativeSelection() {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#initiative-')) {
+        try {
+          localStorage.setItem(INITIATIVE_HASH_KEY, hash);
+        } catch (err) {
+          console.warn('Unable to persist initiative selection', err);
+        }
+      }
+      if (!hash || !hash.startsWith('#initiative-')) {
+        return;
+      }
+      const row = document.querySelector(hash);
+      if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!window.location.hash) {
+        try {
+          const saved = localStorage.getItem(INITIATIVE_HASH_KEY);
+          if (saved) {
+            history.replaceState(null, '', saved);
+          }
+        } catch (err) {
+          console.warn('Unable to restore initiative selection', err);
+        }
+      }
+      syncInitiativeSelection();
+    });
+
+    window.addEventListener('hashchange', syncInitiativeSelection);
+
     function downloadSvg() {
       const payload = document.getElementById('rendered-payload').value;
       fetch('/ui/svg', {

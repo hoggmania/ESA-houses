@@ -8,6 +8,7 @@ import io.quarkus.logging.Log;
 import io.quarkus.qute.Location;
 import io.hoggmania.dashboard.config.DashboardLayoutConfig;
 import io.hoggmania.dashboard.util.ColorPalette;
+import io.hoggmania.dashboard.util.InitiativeAnchor;
 import io.hoggmania.dashboard.util.StringUtils;
 import io.hoggmania.dashboard.util.UrlUtils;
 import io.hoggmania.dashboard.model.RenderItem;
@@ -140,6 +141,8 @@ public class SvgService {
                 lastGov.capabilityLines = escapeLines(wrapText(cleanCapability, capabilityCharsPerLine, maxCapabilityLines));
                 lastGov.nameHref = nameLink.href;
                 lastGov.capabilityHref = capabilityLink.href;
+                lastGov.initiativeHref = resolveInitiativeHref(comp);
+                lastGov.initiativeNewTab = isExternalLink(lastGov.initiativeHref);
                 lastGov.initiativeStroke = computeInitiativeStroke(comp, gradientId, initiativeGradients);
                 configureTextLayout(lastGov, textCenterX, textLeftX, iconPosX);
 
@@ -230,6 +233,8 @@ public class SvgService {
                         lastDomainItem.capabilityLines = escapeLines(wrapText(cleanCapability2, capabilityCharsPerLine, maxCapabilityLines));
                         lastDomainItem.nameHref = nameLink2.href;
                         lastDomainItem.capabilityHref = capabilityLink2.href;
+                        lastDomainItem.initiativeHref = resolveInitiativeHref(comp);
+                        lastDomainItem.initiativeNewTab = isExternalLink(lastDomainItem.initiativeHref);
                         lastDomainItem.initiativeStroke = computeInitiativeStroke(comp, gradientId, initiativeGradients);
                         configureTextLayout(lastDomainItem, textCenterX, textLeftX, iconPosX);
                     }
@@ -407,6 +412,22 @@ public class SvgService {
         }
         gradients.add(gradient);
         return "url(#" + gradientId + ")";
+    }
+
+    private String resolveInitiativeHref(ComponentItem comp) {
+        if (comp == null || comp.initiativeDetails == null || comp.initiativeDetails.isEmpty()) {
+            return null;
+        }
+        String key = comp.initiativeDetails.get(0) != null ? comp.initiativeDetails.get(0).key : null;
+        String anchorId = InitiativeAnchor.toAnchorId(key);
+        return anchorId == null ? null : ("#" + anchorId);
+    }
+
+    private boolean isExternalLink(String href) {
+        if (href == null || href.isBlank()) {
+            return false;
+        }
+        return !href.trim().startsWith("#");
     }
 
     private String colorForInitiativeRag(char c) {

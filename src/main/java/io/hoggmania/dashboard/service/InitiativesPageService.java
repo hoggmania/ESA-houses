@@ -16,6 +16,7 @@ import io.hoggmania.dashboard.model.ESA;
 import io.hoggmania.dashboard.model.Governance;
 import io.hoggmania.dashboard.model.InitiativeRow;
 import io.hoggmania.dashboard.util.ColorPalette;
+import io.hoggmania.dashboard.util.InitiativeAnchor;
 import io.hoggmania.dashboard.util.StringUtils;
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
@@ -143,11 +144,13 @@ public class InitiativesPageService {
         String riskAppetite = firstNonBlank(initiative.riskAppetite, "");
         String toolId = firstNonBlank(initiative.toolId, "In-Demand");
         String dueDate = formatDate(initiative.dueDate);
+        String anchorId = InitiativeAnchor.toAnchorId(key);
         return new InitiativeRow(
                 capabilityLabel,
                 componentLabel,
                 key,
                 blankToNull(initiative.link),
+                anchorId,
                 rag.toUpperCase(Locale.ENGLISH),
                 ragColor(rag),
                 summary,
