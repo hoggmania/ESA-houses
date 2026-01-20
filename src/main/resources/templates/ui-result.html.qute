@@ -15,9 +15,25 @@
     .panel h2 { margin-top: 0; color: #1E3A8A; }
     .svg-wrapper { overflow: auto; }
     .initiatives-wrapper { max-height: 900px; overflow: auto; background: white; border-radius: 8px; }
+    .initiatives-scale { transform-origin: top left; display: inline-block; }
   </style>
   <script>
     const INITIATIVE_HASH_KEY = 'esa-initiative-hash';
+
+    function syncInitiativesScale() {
+      const svg = document.querySelector('.svg-wrapper svg');
+      const scaleTarget = document.querySelector('.initiatives-scale');
+      if (!svg || !scaleTarget) {
+        return;
+      }
+      const svgWidth = svg.getBoundingClientRect().width;
+      const contentWidth = scaleTarget.scrollWidth;
+      if (!contentWidth) {
+        return;
+      }
+      const scale = svgWidth > 0 ? Math.min(1, svgWidth / contentWidth) : 1;
+      scaleTarget.style.transform = 'scale(' + scale + ')';
+    }
 
     function syncInitiativeSelection() {
       const hash = window.location.hash;
@@ -48,10 +64,12 @@
           console.warn('Unable to restore initiative selection', err);
         }
       }
+      syncInitiativesScale();
       syncInitiativeSelection();
     });
 
     window.addEventListener('hashchange', syncInitiativeSelection);
+    window.addEventListener('resize', syncInitiativesScale);
 
     function downloadSvg() {
       const payload = document.getElementById('rendered-payload').value;
@@ -96,7 +114,9 @@
     <div class="panel">
       <h2>Initiatives</h2>
       <div class="initiatives-wrapper">
-        {initiatives.raw}
+        <div class="initiatives-scale">
+          {initiatives.raw}
+        </div>
       </div>
     </div>
   </div>

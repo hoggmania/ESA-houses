@@ -74,7 +74,6 @@
     <textarea id="payload" name="payload" spellcheck="false">{payload}</textarea>
     <div class="row">
       <button type="submit">Render</button>
-      <button type="submit" formaction="/ui/render-initiatives">Render Initiatives</button>
       <button type="button" class="secondary" onclick="pasteSample()">Paste Sample</button>
     </div>
   </form>
